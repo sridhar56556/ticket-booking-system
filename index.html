@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#020617">
+    <meta name="description" content="TRAVAL - Premium Travel Booking Platform for Bus, Train, Flight and Ship. Book tickets seamlessly with real-time seat selection.">
+    <title>TRAVAL — Premium Travel Experience</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-black">
+    <!-- Background Decor -->
+    <div class="main-glow"></div>
+    <div class="blob-1"></div>
+    <div class="blob-2"></div>
+
+    <!-- Success Animation Overlay -->
+    <div id="successOverlay" class="d-none">
+        <div class="success-content text-center">
+            <div class="success-icon-ring mx-auto">
+                <i class="bi bi-check-lg success-check-icon"></i>
+            </div>
+            <h2 id="successTitle" class="mt-4 animate__animated animate__fadeInUp text-white fw-bold">Success!</h2>
+            <p id="successSub" class="animate__animated animate__fadeInUp animate__delay-1s" style="color:rgba(167,243,208,0.85);">You're all set.</p>
+            <div id="successUserChip" class="success-user-chip d-none"></div>
+        </div>
+    </div>
+
+    <!-- ===================== 1. WELCOME SCREEN ===================== -->
+    <div id="welcomeScreen" class="screen-view d-flex flex-column">
+        <!-- Top Hero Section -->
+        <div class="welcome-hero flex-grow-1 d-flex align-items-center justify-content-center p-4">
+            <div class="text-center animate__animated animate__fadeIn">
+                <!-- Animated Travel Icon -->
+                <div class="welcome-icon-ring mb-4 mx-auto animate__animated animate__bounceIn">
+                    <i class="bi bi-airplane-engines welcome-plane-icon"></i>
+                </div>
+                <!-- Greeting -->
+                <p class="welcome-greeting animate__animated animate__fadeInDown animate__delay-1s">✈ Welcome, Traveler</p>
+                <h1 class="logo-text mb-2">TRAVAL</h1>
+                <p class="tagline mb-5 animate__animated animate__fadeInUp animate__delay-1s">
+                    Explore The World — Your Journey Starts Here
+                </p>
+                <div class="animate__animated animate__zoomIn animate__delay-2s">
+                    <button class="btn btn-start-journey btn-lg px-5 py-3 rounded-pill shadow-lg" onclick="showAuthScreen()">
+                        <i class="bi bi-compass-fill me-2"></i> START YOUR JOURNEY
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Transport Explorer Bar -->
+        <div class="welcome-explore-bar">
+            <p class="explore-label">EXPLORE BY TRANSPORT</p>
+            <div class="explore-transport-strip">
+                <div class="transport-chip">
+                    <div class="transport-chip-icon" style="background: rgba(251,146,60,0.2); border-color: rgba(251,146,60,0.5);">
+                        <i class="bi bi-bus-front" style="color: #fb923c;"></i>
+                    </div>
+                    <span>Bus</span>
+                    <small>From ₹200</small>
+                </div>
+                <div class="transport-chip">
+                    <div class="transport-chip-icon" style="background: rgba(56,189,248,0.2); border-color: rgba(56,189,248,0.5);">
+                        <i class="bi bi-train-front" style="color: #38bdf8;"></i>
+                    </div>
+                    <span>Train</span>
+                    <small>From ₹150</small>
+                </div>
+                <div class="transport-chip">
+                    <div class="transport-chip-icon" style="background: rgba(192,132,252,0.2); border-color: rgba(192,132,252,0.5);">
+                        <i class="bi bi-airplane" style="color: #c084fc;"></i>
+                    </div>
+                    <span>Flight</span>
+                    <small>From ₹2,500</small>
+                </div>
+                <div class="transport-chip">
+                    <div class="transport-chip-icon" style="background: rgba(45,212,191,0.2); border-color: rgba(45,212,191,0.5);">
+                        <i class="bi bi-water" style="color: #2dd4bf;"></i>
+                    </div>
+                    <span>Ship</span>
+                    <small>From ₹500</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 2. AUTH SCREEN ===================== -->
+    <div id="authScreen" class="screen-view d-none py-5">
+        <div class="container h-100 d-flex align-items-center justify-content-center">
+            <div class="col-md-5">
+                <div class="glass-card animate__animated animate__backInDown p-4">
+                    <div class="text-center mb-4">
+                        <div class="auth-logo-icon mx-auto mb-3">
+                            <i class="bi bi-airplane-engines fs-1 text-primary"></i>
+                        </div>
+                        <h3 class="fw-bold">Welcome to TRAVAL</h3>
+                        <p class="text-muted small">Your premium travel companion</p>
+                    </div>
+                    
+                    <ul class="nav nav-pills nav-fill mb-4 bg-dark-glass rounded-pill p-1 border border-secondary border-opacity-10">
+                        <li class="nav-item">
+                            <button class="nav-link active rounded-pill px-4 fw-bold" id="login-tab" data-bs-toggle="pill" data-bs-target="#loginView">Sign In</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link rounded-pill px-4 fw-bold" id="signup-tab" data-bs-toggle="pill" data-bs-target="#signupView">Register</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Login View -->
+                        <div class="tab-pane fade show active" id="loginView">
+                            <form onsubmit="handleLogin(event)" class="animate__animated animate__fadeIn">
+                                <div class="mb-4">
+                                    <label class="form-label text-muted small px-2">EMAIL / PHONE / USERNAME</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text border-0 bg-transparent"><i class="bi bi-person text-primary"></i></span>
+                                        <input type="text" class="form-control-glass rounded-pill" id="loginUsername" placeholder="email, phone or username" required>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-muted small px-2">PASSWORD</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text border-0 bg-transparent"><i class="bi bi-lock text-primary"></i></span>
+                                        <input type="password" class="form-control-glass rounded-pill" id="loginPassword" placeholder="••••••••" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary rounded-pill w-100 py-3 fw-bold">CONTINUE <i class="bi bi-chevron-right ms-2"></i></button>
+                            </form>
+                        </div>
+
+                        <!-- Register View -->
+                        <div class="tab-pane fade" id="signupView">
+                            <form onsubmit="handleSignup(event)" class="animate__animated animate__fadeIn">
+                                <!-- Full Name -->
+                                <div class="mb-3">
+                                    <label class="reg-label"><i class="bi bi-person-fill me-1" style="color:#fb923c;"></i> FULL NAME</label>
+                                    <input type="text" class="reg-input" id="signupName" placeholder="Enter your full name" autocomplete="off" required>
+                                </div>
+                                <!-- Mobile -->
+                                <div class="mb-3">
+                                    <label class="reg-label"><i class="bi bi-phone-fill me-1" style="color:#38bdf8;"></i> MOBILE NUMBER</label>
+                                    <input type="tel" class="reg-input" id="signupMobile" placeholder="9876543210" pattern="[6789][0-9]{9}" autocomplete="off" required>
+                                </div>
+                                <!-- DOB -->
+                                <div class="mb-3">
+                                    <label class="reg-label"><i class="bi bi-calendar3 me-1" style="color:#c084fc;"></i> DATE OF BIRTH</label>
+                                    <input type="date" class="reg-input" id="signupDOB" required>
+                                </div>
+                                <!-- Email -->
+                                <div class="mb-3">
+                                    <label class="reg-label"><i class="bi bi-envelope-fill me-1" style="color:#2dd4bf;"></i> EMAIL ADDRESS</label>
+                                    <input type="email" class="reg-input" id="signupEmail" placeholder="you@example.com" autocomplete="new-email" required>
+                                </div>
+                                <!-- Password with eye toggle -->
+                                <div class="mb-4">
+                                    <label class="reg-label"><i class="bi bi-shield-lock-fill me-1" style="color:#f59e0b;"></i> SET PASSWORD</label>
+                                    <div class="password-wrapper">
+                                        <input type="password" class="reg-input" id="signupPassword" placeholder="Min 8 chars · 1 uppercase · 1 special" autocomplete="new-password" onkeyup="checkPasswordStrength(this.value)" required>
+                                        <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('signupPassword', this)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="password-strength-meter mt-2">
+                                        <div class="strength-bar"></div>
+                                    </div>
+                                    <p id="password-feedback" class="small text-muted mt-1 mb-0">At least 8 chars · 1 uppercase · 1 special char</p>
+                                </div>
+                                <button type="submit" class="btn btn-register w-100 py-3 fw-bold rounded-pill">CREATE ACCOUNT</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button class="btn btn-link text-muted text-decoration-none" onclick="goToWelcome()">
+                        <i class="bi bi-arrow-left"></i> Back to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== 3. DASHBOARD SCREEN ===================== -->
+    <div id="dashboardScreen" class="screen-view d-none">
+        <div class="dashboard-wrapper">
+            <!-- Sidebar Navigation -->
+            <aside class="dashboard-sidebar glass-card">
+                <div class="sidebar-header p-4">
+                    <span class="navbar-brand">TRAVAL</span>
+                </div>
+                <!-- Sidebar User Card -->
+                <div class="sidebar-user-card" onclick="showProfile()">
+                    <div class="sidebar-avatar">
+                        <i class="bi bi-person-fill"></i>
+                        <span class="sidebar-gender-dot" title="Male">♂</span>
+                    </div>
+                    <div class="sidebar-user-info">
+                        <p class="sidebar-user-name" id="sidebarUserName">User</p>
+                        <p class="sidebar-user-phone" id="sidebarUserPhone"><i class="bi bi-telephone-fill me-1"></i>—</p>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" id="nav-overview" onclick="showDashboardHome(); return false;"><i class="bi bi-grid-1x2"></i> Overview</a>
+                    <a href="#" class="nav-item" id="nav-book" onclick="showBooking(); return false;"><i class="bi bi-ticket-perforated"></i> Book Ticket</a>
+                    <a href="#" class="nav-item" id="nav-bookings" onclick="showBookings(); return false;"><i class="bi bi-calendar3"></i> My Bookings</a>
+                    <a href="#" class="nav-item" id="nav-history" onclick="showHistory(); return false;"><i class="bi bi-clock-history"></i> History</a>
+                    <a href="#" class="nav-item" id="nav-wallet" onclick="showWallet(); return false;">
+                        <i class="bi bi-wallet2" style="color:#10b981;"></i> Wallet
+                        <span id="walletBadge" class="wallet-badge ms-auto">₹0</span>
+                    </a>
+                    <div class="nav-divider"></div>
+                    <a href="#" class="nav-item" id="nav-profile" onclick="showProfile(); return false;"><i class="bi bi-person-gear"></i> Profile</a>
+                    <a href="#" class="nav-item mt-auto text-danger" onclick="handleLogout(); return false;"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="dashboard-main">
+                <header class="dashboard-header d-flex justify-content-between align-items-center mb-4">
+                    <div class="welcome-msg">
+                        <p class="text-muted small mb-0">Good Day, <i class="bi bi-gender-male" style="color:#60a5fa;"></i> Welcome back!</p>
+                        <h4 class="fw-bold mb-0"><span id="userName">User</span> 👋</h4>
+                        <p class="header-phone-display mb-0"><i class="bi bi-telephone-fill me-1" style="color:#38bdf8;"></i><span id="headerUserPhone">—</span></p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-icon-glass me-2"><i class="bi bi-bell"></i></button>
+                        <div class="user-avatar-glass male-avatar" onclick="showProfile()" id="userAvatarBtn">
+                            <span id="userInitials">U</span>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="content-container">
+                    <!-- ===== DASHBOARD HOME ===== -->
+                    <div id="dashboardHome" class="content-section animate__animated">
+                        <!-- Hero Search -->
+                        <div class="dashboard-hero mb-5">
+                            <h2 class="section-title mb-4">Where are you going? 🌍</h2>
+                            <div class="search-bar-glass p-3 rounded-pill d-flex align-items-center gap-2">
+                                <div class="flex-grow-1 ps-3">
+                                    <label class="small text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">From</label>
+                                    <input type="text" class="border-0 bg-transparent text-white w-100 search-hero-input" placeholder="Current location" list="cityListMain" id="heroFrom">
+                                </div>
+                                <button class="btn btn-icon-glass px-2" title="Swap" onclick="swapHeroCities()"><i class="bi bi-arrow-left-right text-primary"></i></button>
+                                <div class="flex-grow-1">
+                                    <label class="small text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">To</label>
+                                    <input type="text" class="border-0 bg-transparent text-white w-100 search-hero-input" placeholder="Search destination" list="cityListMain" id="heroTo">
+                                </div>
+                                <button class="btn btn-primary-glass rounded-pill px-4 py-2" onclick="showBooking()">
+                                    <i class="bi bi-search me-2"></i> SEARCH
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Action Cards -->
+                        <div class="row g-4 mb-5">
+                            <div class="col-6 col-md-3">
+                                <div class="card dashboard-card text-center p-3" onclick="showBooking()">
+                                    <i class="bi bi-ticket-detailed display-6" style="color: var(--color-bus);"></i>
+                                    <h5 class="mt-3">Book Ticket</h5>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card dashboard-card text-center p-3" onclick="showBookings()">
+                                    <i class="bi bi-list-check display-6 text-success"></i>
+                                    <h5 class="mt-3">My Bookings</h5>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card dashboard-card text-center p-3" onclick="showProfile()">
+                                    <i class="bi bi-person-circle display-6 text-info"></i>
+                                    <h5 class="mt-3">Profile</h5>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card dashboard-card text-center p-3" onclick="showHistory()">
+                                    <i class="bi bi-clock-history display-6 text-warning"></i>
+                                    <h5 class="mt-3">History</h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <h5 class="section-title mb-3">Your Statistics</h5>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="stat-card glass-card p-4 text-center hover-lift">
+                                    <div class="stat-icon mb-3"><i class="bi bi-ticket-perforated fs-2 text-primary"></i></div>
+                                    <h6 class="text-muted">Total Bookings</h6>
+                                    <h3 id="totalBookings" class="stat-value">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card glass-card p-4 text-center hover-lift">
+                                    <div class="stat-icon mb-3"><i class="bi bi-geo-alt fs-2 text-success"></i></div>
+                                    <h6 class="text-muted">Active Journey</h6>
+                                    <h3 id="activeBookings" class="stat-value">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card glass-card p-4 text-center hover-lift">
+                                    <div class="stat-icon mb-3"><i class="bi bi-currency-rupee fs-2 text-warning"></i></div>
+                                    <h6 class="text-muted">Total Spent</h6>
+                                    <h3 id="totalSpent" class="stat-value">₹0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== BOOKING SECTION ===== -->
+                    <div id="bookingSection" class="content-section d-none animate__animated">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <button class="btn btn-secondary btn-sm rounded-pill" onclick="showDashboardHome()"><i class="bi bi-arrow-left me-1"></i> Back</button>
+                                <h2 class="mt-3 section-title">🎟️ Book Your Journey</h2>
+                            </div>
+                        </div>
+
+                        <!-- Booking Step Progress Bar -->
+                        <div class="booking-progress mb-4">
+                            <div class="progress-step active" id="prog-1"><span>1</span><small>Service</small></div>
+                            <div class="progress-line" id="pline-1"></div>
+                            <div class="progress-step" id="prog-2"><span>2</span><small>Details</small></div>
+                            <div class="progress-line" id="pline-2"></div>
+                            <div class="progress-step" id="prog-3"><span>3</span><small>Passengers</small></div>
+                            <div class="progress-line" id="pline-3"></div>
+                            <div class="progress-step" id="prog-4"><span>4</span><small>Payment</small></div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <div class="glass-card p-4">
+                                    <form id="bookingForm">
+                                        <!-- Step 1: Service Selection -->
+                                        <div class="booking-step animate__animated animate__fadeIn" id="step1">
+                                            <h5 class="mb-4 fw-bold"><i class="bi bi-grid-1x2 me-2 text-primary"></i>Select Your Transport</h5>
+                                            <div class="row g-3">
+                                                <div class="col-6">
+                                                    <div class="service-card" data-service="Bus" onclick="selectService('Bus')">
+                                                        <i class="bi bi-bus-front fs-1"></i>
+                                                        <h5>Bus</h5>
+                                                        <small class="text-muted">From ₹200</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="service-card" data-service="Train" onclick="selectService('Train')">
+                                                        <i class="bi bi-train-front fs-1"></i>
+                                                        <h5>Train</h5>
+                                                        <small class="text-muted">From ₹150</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="service-card" data-service="Flight" onclick="selectService('Flight')">
+                                                        <i class="bi bi-airplane fs-1"></i>
+                                                        <h5>Flight</h5>
+                                                        <small class="text-muted">From ₹2,500</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="service-card" data-service="Ship" onclick="selectService('Ship')">
+                                                        <i class="bi bi-water fs-1"></i>
+                                                        <h5>Ship</h5>
+                                                        <small class="text-muted">From ₹500</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 2: Journey Details -->
+                                        <div class="booking-step d-none animate__animated" id="step2">
+                                            <h5 class="mb-4 fw-bold"><i class="bi bi-map me-2 text-primary"></i>Journey Details</h5>
+                                            <div class="mb-3">
+                                                <label class="form-label">Operator</label>
+                                                <select class="form-select form-control-glass" id="operatorSelect" required></select>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">From City</label>
+                                                    <input type="text" class="form-control form-control-glass" id="fromCity" list="cityList" placeholder="e.g. Hyderabad" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">To City</label>
+                                                    <input type="text" class="form-control form-control-glass" id="toCity" list="cityList" placeholder="e.g. Mumbai" required>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Journey Date</label>
+                                                    <input type="date" class="form-control form-control-glass" id="journeyDate" required>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Departure Time</label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control form-control-glass" id="journeyHour" placeholder="10:30" required>
+                                                        <select class="form-select form-control-glass" id="journeyAmPm" style="max-width: 80px;"><option>AM</option><option>PM</option></select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Travel Class</label>
+                                                <select class="form-select form-control-glass" id="typeSelect" required></select>
+                                            </div>
+                                            <div class="mb-4">
+                                                <label class="form-label">Number of Passengers (1–5)</label>
+                                                <input type="number" class="form-control form-control-glass" id="passengerCount" min="1" max="5" value="1">
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-secondary rounded-pill" onclick="goToStep1()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                                                <button type="button" class="btn btn-primary-glass w-100" onclick="goToStep3()">Next <i class="bi bi-arrow-right ms-1"></i></button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 3: Passenger & Seat Selection -->
+                                        <div class="booking-step d-none animate__animated" id="step3">
+                                            <h5 class="mb-4 fw-bold"><i class="bi bi-people me-2 text-primary"></i>Passenger Details & Seat Selection</h5>
+                                            <div id="passengerForms"></div>
+                                            <!-- Luggage Option -->
+                                            <div class="glass-card p-3 mb-4" style="border-radius: 16px;">
+                                                <div class="form-check d-flex align-items-center gap-3">
+                                                    <input class="form-check-input" type="checkbox" id="luggageCheck" style="width: 22px; height: 22px;">
+                                                    <label class="form-check-label fw-bold" for="luggageCheck">
+                                                        <i class="bi bi-briefcase me-2 text-warning"></i>Add Extra Luggage
+                                                        <small class="text-muted ms-2">(+₹50 per passenger)</small>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-2 mt-3">
+                                                <button type="button" class="btn btn-secondary rounded-pill" onclick="goToStep2()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                                                <button type="button" class="btn btn-primary-glass w-100" onclick="goToStep4()">Review & Pay <i class="bi bi-arrow-right ms-1"></i></button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 4: Payment & Review -->
+                                        <div class="booking-step d-none animate__animated" id="step4">
+                                            <h5 class="mb-4 fw-bold"><i class="bi bi-credit-card me-2 text-primary"></i>Review & Payment</h5>
+                                            
+                                            <!-- Fare Breakdown -->
+                                            <div class="fare-breakdown glass-card p-4 mb-4" style="border-radius: 20px;">
+                                                <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Fare Breakdown</h6>
+                                                <div class="fare-row"><span>Base Fare (per person)</span><span id="baseFareDisplay">₹0</span></div>
+                                                <div class="fare-row"><span>Subtotal</span><span id="subtotalDisplay">₹0</span></div>
+                                                <div class="fare-row text-warning"><span>GST (18%)</span><span id="gstDisplay">₹0</span></div>
+                                                <div class="fare-row text-success"><span>Discount</span><span id="discountDisplay">-₹0</span></div>
+                                                <div class="fare-row fare-total"><span>Total Payable</span><span id="totalDisplay">₹0</span></div>
+                                            </div>
+
+                                            <!-- Coupon -->
+                                            <div class="mb-4">
+                                                <label class="form-label">Have a Coupon Code?</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control form-control-glass" id="couponCode" placeholder="e.g. FIRST10, SAVE20, FLAT15">
+                                                    <button type="button" class="btn btn-primary-glass" onclick="applyCoupon()">Apply</button>
+                                                </div>
+                                                <small class="text-muted ms-2">Available: FIRST10 (10%), SAVE20 (20%), FLAT15 (5%)</small>
+                                            </div>
+
+                                            <!-- Payment Method -->
+                                            <div class="mb-3">
+                                                <label class="form-label">Payment Method</label>
+                                                <select class="form-select form-control-glass" id="paymentMethod" onchange="showPaymentFields()">
+                                                    <option value="">Select Payment Method</option>
+                                                    <option value="Wallet">💰 Wallet (Balance: <span id="walletOptionBalance">₹0</span>)</option>
+                                                    <option value="UPI">UPI</option>
+                                                    <option value="Card">Card</option>
+                                                    <option value="Cash">Cash</option>
+                                                </select>
+                                            </div>
+                                            <div id="paymentFields" class="mb-3"></div>
+
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-secondary rounded-pill" onclick="goToStep3Direct()"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                                                <button type="submit" class="btn btn-success rounded-pill w-100 py-2 fw-bold">
+                                                    <i class="bi bi-shield-check me-2"></i>Pay Now
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Booking Summary Sidebar -->
+                            <div class="col-lg-4 mt-4 mt-lg-0">
+                                <div id="bookingSummary" class="sticky-top" style="top: 20px;">
+                                    <p class="text-muted"><i class="bi bi-info-circle me-2"></i>Select a service to begin</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MY BOOKINGS ===== -->
+                    <div id="myBookingsSection" class="content-section d-none animate__animated">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                            <h2 class="section-title">My Bookings</h2>
+                            <input type="text" class="form-control-glass rounded-pill" style="max-width: 250px;" id="bookingSearch" placeholder="🔍 Search bookings..." onkeyup="filterBookings('bookingsList', 'bookingSearch')">
+                        </div>
+                        <div id="bookingsList"></div>
+                    </div>
+
+                    <!-- ===== PROFILE ===== -->
+                    <div id="profileSection" class="content-section d-none animate__animated">
+                        <h2 class="section-title mb-4">Profile Settings</h2>
+                        <div class="glass-card p-4 col-md-8 mx-auto">
+                            <div class="text-center mb-4">
+                                <div class="user-avatar-glass mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <h5 class="fw-bold" id="profileDisplayName">User</h5>
+                            </div>
+                            <form onsubmit="updateProfile(event)">
+                                <div class="mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control-glass" id="profileName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Mobile Number</label>
+                                    <input type="tel" class="form-control-glass" id="profileMobile" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" class="form-control-glass" id="profileEmail" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary-glass w-100">Update Profile</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ===== HISTORY ===== -->
+                    <div id="historySection" class="content-section d-none animate__animated">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                            <h2 class="section-title">Travel History</h2>
+                            <input type="text" class="form-control-glass rounded-pill" style="max-width: 250px;" id="historySearch" placeholder="🔍 Search history..." onkeyup="filterBookings('historyList', 'historySearch')">
+                        </div>
+                        <div id="historyList"></div>
+                    </div>
+
+                    <!-- ===== WALLET SECTION ===== -->
+                    <div id="walletSection" class="content-section d-none animate__animated">
+                        <h2 class="section-title mb-4">My Wallet 💰</h2>
+
+                        <!-- Balance Card -->
+                        <div class="wallet-balance-card mb-5">
+                            <div class="wallet-balance-top">
+                                <div>
+                                    <p class="wallet-balance-label">AVAILABLE BALANCE</p>
+                                    <h1 class="wallet-balance-amount" id="walletBalanceDisplay">₹0.00</h1>
+                                </div>
+                                <div class="wallet-icon-circle">
+                                    <i class="bi bi-wallet2"></i>
+                                </div>
+                            </div>
+                            <div class="wallet-balance-footer">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Refunds from cancelled bookings are credited here automatically.
+                            </div>
+                        </div>
+
+                        <!-- Transactions -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">Transaction History</h5>
+                            <span id="walletTxCount" class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);padding:6px 14px;border-radius:20px;font-size:0.8rem;">0 transactions</span>
+                        </div>
+                        <div id="walletTransactions">
+                            <div class="wallet-empty-state">
+                                <i class="bi bi-wallet2" style="font-size:3rem;color:rgba(16,185,129,0.3);"></i>
+                                <p class="mt-3 text-muted">No transactions yet.<br>Cancel a booking to receive a refund here.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+            
+            <!-- Mobile Bottom Navigation -->
+            <nav class="mobile-bottom-nav">
+                <button class="mobile-nav-btn active" onclick="showDashboardHome(); updateMobileNav(this)">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Home</span>
+                </button>
+                <button class="mobile-nav-btn" onclick="showBooking(); updateMobileNav(this)">
+                    <i class="bi bi-ticket-perforated"></i>
+                    <span>Book</span>
+                </button>
+                <button class="mobile-nav-btn" onclick="showBookings(); updateMobileNav(this)">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Bookings</span>
+                </button>
+                <button class="mobile-nav-btn" onclick="showWallet(); updateMobileNav(this)">
+                    <i class="bi bi-wallet2"></i>
+                    <span id="mobileWalletBadge" class="wallet-mobile-badge d-none">₹0</span>
+                    <span>Wallet</span>
+                </button>
+                <button class="mobile-nav-btn" onclick="showProfile(); updateMobileNav(this)">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Profile</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- ===================== CITY DATALISTS ===================== -->
+    <datalist id="cityList">
+        <!-- Telangana -->
+        <option value="Hyderabad, Telangana">
+        <option value="Warangal, Telangana">
+        <option value="Karimnagar, Telangana">
+        <option value="Nizamabad, Telangana">
+        <option value="Khammam, Telangana">
+        <option value="Ramagundam, Telangana">
+        <option value="Mahbubnagar, Telangana">
+        <option value="Nalgonda, Telangana">
+        <option value="Adilabad, Telangana">
+        <option value="Suryapet, Telangana">
+        <option value="Miryalaguda, Telangana">
+        <option value="Jagtial, Telangana">
+        <option value="Siddipet, Telangana">
+        <option value="Mancherial, Telangana">
+        <!-- Andhra Pradesh -->
+        <option value="Vijayawada, Andhra Pradesh">
+        <option value="Visakhapatnam, Andhra Pradesh">
+        <option value="Tirupati, Andhra Pradesh">
+        <option value="Guntur, Andhra Pradesh">
+        <option value="Nellore, Andhra Pradesh">
+        <option value="Kurnool, Andhra Pradesh">
+        <option value="Rajahmundry, Andhra Pradesh">
+        <option value="Kakinada, Andhra Pradesh">
+        <option value="Ongole, Andhra Pradesh">
+        <option value="Anantapur, Andhra Pradesh">
+        <!-- Karnataka -->
+        <option value="Bengaluru, Karnataka">
+        <option value="Mysuru, Karnataka">
+        <option value="Mangaluru, Karnataka">
+        <option value="Hubballi, Karnataka">
+        <option value="Ballari, Karnataka">
+        <option value="Shivamogga, Karnataka">
+        <!-- Tamil Nadu -->
+        <option value="Chennai, Tamil Nadu">
+        <option value="Coimbatore, Tamil Nadu">
+        <option value="Madurai, Tamil Nadu">
+        <option value="Trichy, Tamil Nadu">
+        <option value="Salem, Tamil Nadu">
+        <option value="Tirunelveli, Tamil Nadu">
+        <option value="Vellore, Tamil Nadu">
+        <!-- Maharashtra -->
+        <option value="Mumbai, Maharashtra">
+        <option value="Pune, Maharashtra">
+        <option value="Nagpur, Maharashtra">
+        <option value="Nashik, Maharashtra">
+        <option value="Aurangabad, Maharashtra">
+        <option value="Solapur, Maharashtra">
+        <!-- Delhi / NCR -->
+        <option value="New Delhi, Delhi">
+        <option value="Noida, UP">
+        <option value="Gurgaon, Haryana">
+        <option value="Faridabad, Haryana">
+        <!-- Uttar Pradesh -->
+        <option value="Lucknow, UP">
+        <option value="Kanpur, UP">
+        <option value="Agra, UP">
+        <option value="Varanasi, UP">
+        <option value="Prayagraj, UP">
+        <option value="Ghaziabad, UP">
+        <!-- Rajasthan -->
+        <option value="Jaipur, Rajasthan">
+        <option value="Jodhpur, Rajasthan">
+        <option value="Udaipur, Rajasthan">
+        <option value="Ajmer, Rajasthan">
+        <option value="Bikaner, Rajasthan">
+        <!-- Gujarat -->
+        <option value="Ahmedabad, Gujarat">
+        <option value="Surat, Gujarat">
+        <option value="Vadodara, Gujarat">
+        <option value="Rajkot, Gujarat">
+        <!-- West Bengal -->
+        <option value="Kolkata, West Bengal">
+        <option value="Durgapur, West Bengal">
+        <option value="Asansol, West Bengal">
+        <option value="Siliguri, West Bengal">
+        <!-- Madhya Pradesh -->
+        <option value="Bhopal, Madhya Pradesh">
+        <option value="Indore, Madhya Pradesh">
+        <option value="Gwalior, Madhya Pradesh">
+        <option value="Jabalpur, Madhya Pradesh">
+        <!-- Bihar -->
+        <option value="Patna, Bihar">
+        <option value="Gaya, Bihar">
+        <option value="Muzaffarpur, Bihar">
+        <!-- Punjab & Haryana -->
+        <option value="Chandigarh, Punjab">
+        <option value="Amritsar, Punjab">
+        <option value="Ludhiana, Punjab">
+        <!-- Other -->
+        <option value="Bhubaneswar, Odisha">
+        <option value="Guwahati, Assam">
+        <option value="Jammu, J&K">
+        <option value="Srinagar, J&K">
+        <option value="Dehradun, Uttarakhand">
+        <option value="Ranchi, Jharkhand">
+        <option value="Raipur, Chhattisgarh">
+        <option value="Thiruvananthapuram, Kerala">
+        <option value="Kochi, Kerala">
+        <option value="Kozhikode, Kerala">
+        <option value="Goa, Goa">
+        <option value="Panaji, Goa">
+    </datalist>
+
+    <!-- Same list for hero search -->
+    <datalist id="cityListMain">
+        <option value="Hyderabad, Telangana">
+        <option value="Mumbai, Maharashtra">
+        <option value="Delhi, Delhi">
+        <option value="Bengaluru, Karnataka">
+        <option value="Chennai, Tamil Nadu">
+        <option value="Kolkata, West Bengal">
+        <option value="Pune, Maharashtra">
+        <option value="Ahmedabad, Gujarat">
+        <option value="Jaipur, Rajasthan">
+        <option value="Lucknow, UP">
+        <option value="Vijayawada, Andhra Pradesh">
+        <option value="Visakhapatnam, Andhra Pradesh">
+        <option value="Warangal, Telangana">
+        <option value="Karimnagar, Telangana">
+        <option value="Goa, Goa">
+        <option value="Bhubaneswar, Odisha">
+        <option value="Kochi, Kerala">
+        <option value="Coimbatore, Tamil Nadu">
+    </datalist>
+
+    <!-- ===================== MODALS ===================== -->
+    <!-- Receipt Modal -->
+    <div class="modal fade" id="receiptModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-white border border-secondary">
+                <div class="modal-body" id="receiptContent"></div>
+                <div class="modal-footer border-secondary">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="modal fade" id="ratingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rating-modal-card text-center p-0 overflow-hidden">
+                <!-- Top gradient bar -->
+                <div style="height:4px;background:linear-gradient(90deg,#f59e0b,#f97316,#8b5cf6);"></div>
+                <div class="modal-body p-4">
+                    <!-- Icon -->
+                    <div class="rating-icon-ring mx-auto mb-3">
+                        <i class="bi bi-emoji-smile-fill" style="font-size:2rem;color:#f59e0b;"></i>
+                    </div>
+                    <h4 class="fw-800 mb-1" style="font-family:'Outfit',sans-serif;font-weight:800;color:white;">Rate Your Journey</h4>
+                    <p class="mb-4" style="color:rgba(255,255,255,0.45);font-size:0.85rem;">Your feedback makes us better ✨</p>
+
+                    <!-- Stars -->
+                    <div class="star-rating-row mb-1" id="modalStarRating">
+                        <span class="star" onclick="setModalRating(1)" title="Terrible">★</span>
+                        <span class="star" onclick="setModalRating(2)" title="Poor">★</span>
+                        <span class="star" onclick="setModalRating(3)" title="Okay">★</span>
+                        <span class="star" onclick="setModalRating(4)" title="Good">★</span>
+                        <span class="star" onclick="setModalRating(5)" title="Excellent">★</span>
+                    </div>
+                    <p id="ratingLabel" class="fw-bold mb-3" style="color:#f59e0b;min-height:22px;font-size:0.95rem;"></p>
+
+                    <!-- Feedback -->
+                    <textarea class="rating-textarea mb-3" id="ratingFeedbackModal" rows="3"
+                        placeholder="Tell us about your experience... (optional)"></textarea>
+
+                    <button class="btn btn-rate-submit w-100 rounded-pill fw-bold mb-2" onclick="submitModalRating()">
+                        <i class="bi bi-send-fill me-2"></i>Submit Rating
+                    </button>
+                    <button class="btn btn-link mt-1" style="color:rgba(255,255,255,0.3);font-size:0.82rem;"
+                        data-bs-dismiss="modal">Skip for now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Booking Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white border border-danger border-opacity-50">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Cancel Booking</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-4">Please select a reason for cancellation. <span class="text-warning">Note: 20% cancellation fee applies.</span></p>
+                    <select class="form-select form-control-glass" id="cancelReason">
+                        <option value="">Select a reason</option>
+                        <option value="Change of plans">Change of plans</option>
+                        <option value="Emergency">Emergency</option>
+                        <option value="Found better option">Found better option</option>
+                        <option value="Duplicate booking">Duplicate booking</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Keep Booking</button>
+                    <button class="btn btn-danger rounded-pill" id="confirmCancelBtn">
+                        <i class="bi bi-x-circle me-1"></i>Confirm Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

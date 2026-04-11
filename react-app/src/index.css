@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --accent: #f472b6;
+  --success: #10b981;
+  --danger: #ef4444;
+  --bg-dark: #000000;
+  --surface: #0a0a0a;
+  --glass-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --bus: #ff8c00;
+  --train: #1e90ff;
+  --flight: #a85cf6;
+  --ship: #00ced1;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+/* ===================== LOGO & WELCOME ===================== */
+.logo-text {
+  font-size: clamp(3rem, 10vw, 7rem);
+  font-weight: 900;
+  letter-spacing: clamp(10px, 2vw, 20px);
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #ff7675);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow 6s linear infinite;
+  font-family: 'Outfit', sans-serif;
+  text-shadow: 0 0 30px rgba(255,255,255,0.1);
+}
+
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===================== GLASSMORPHISM ===================== */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: 28px;
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+}
+
+.input-glass {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: 1.5px solid var(--glass-border) !important;
+  color: white !important;
+  padding: 14px 20px !important;
+  border-radius: 12px !important;
+  transition: all 0.3s !important;
+}
+
+.input-glass:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* ===================== BUTTONS ===================== */
+.btn-premium {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  border: none;
+  color: white;
+  padding: 14px 32px;
+  border-radius: 100px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+}
+
+.btn-premium:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+}
+
+/* ===================== COMPONENTS ===================== */
+.service-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 30px;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.service-card:hover {
+  transform: translateY(-15px);
+  border-color: white;
+}
+
+.service-card.selected {
+  border-width: 3px;
+  box-shadow: 0 0 40px rgba(255,255,255,0.1);
+}
+
+/* ===================== SEATS ===================== */
+.seat {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; border: 1px solid var(--glass-border);
+  transition: all 0.3s;
+}
+
+.seat.available { background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: var(--success); }
+.seat.available:hover { transform: scale(1.15); background: var(--success); color: white; }
+.seat.booked { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: var(--danger); cursor: not-allowed; opacity: 0.6; }
+.seat.selected { background: var(--success); color: white; border-color: transparent; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+
+/* ===================== UTILS ===================== */
+.screen-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 80%);
+  pointer-events: none; z-index: -1;
+}

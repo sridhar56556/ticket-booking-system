@@ -31,10 +31,11 @@ const DB = {
 
         findByIdentifier(identifier) {
             const users = this.getAll();
+            const iden = identifier.toLowerCase().trim();
             return users.find(u => 
-                u.name === identifier || 
-                u.email === identifier || 
-                u.mobile === identifier
+                u.name.toLowerCase().trim() === iden || 
+                u.email.toLowerCase().trim() === iden || 
+                u.mobile.trim() === iden
             );
         },
         

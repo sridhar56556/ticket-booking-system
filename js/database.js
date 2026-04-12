@@ -31,12 +31,16 @@ const DB = {
 
         findByIdentifier(identifier) {
             const users = this.getAll();
-            const iden = identifier.toLowerCase().trim();
-            return users.find(u => 
-                u.name.toLowerCase().trim() === iden || 
-                u.email.toLowerCase().trim() === iden || 
-                u.mobile.trim() === iden
-            );
+            if (!identifier) return null;
+            const input = identifier.toLowerCase().trim();
+            
+            return users.find(u => {
+                const name = (u.name || '').toLowerCase().trim();
+                const email = (u.email || '').toLowerCase().trim();
+                const mobile = (u.mobile || '').trim();
+                
+                return name === input || email === input || mobile === input;
+            });
         },
         
         create(userData) {

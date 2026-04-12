@@ -495,26 +495,32 @@ function handleSignup(event) {
     const user = DB.users.create({ name, mobile, dob, email, password });
 
     if (user) {
-        // Auto-login the new user immediately
-        currentUser = user;
-        DB.session.set(user);
-
-        // Show animated success overlay
+        // Show animated success overlay with checkmark
         const successOverlay = document.getElementById('successOverlay');
         const successTitle   = document.getElementById('successTitle');
         const successSub     = document.getElementById('successSub');
 
-        if (successTitle) successTitle.textContent = 'Account Created! 🎉';
-        if (successSub)   successSub.textContent   = 'Signing you in automatically...';
+        if (successTitle) successTitle.textContent = 'Account Created! ✅';
+        if (successSub)   successSub.textContent   = 'Registration successful! Please login with your details.';
 
-        if (successOverlay) successOverlay.classList.remove('d-none');
+        if (successOverlay) {
+            successOverlay.classList.remove('d-none');
+        }
 
         setTimeout(() => {
             if (successOverlay) successOverlay.classList.add('d-none');
-            // Go straight to dashboard — no need to log in again
-            showDashboard();
-            showToast('✅ Signed in successfully! Welcome, ' + user.name.split(' ')[0] + '!', 'success');
-        }, 1800);
+            
+            // Switch to Login Tab
+            const loginTab = document.getElementById('login-tab');
+            if (loginTab) {
+                loginTab.click();
+            }
+            
+            // Reset signup form
+            event.target.reset();
+            
+            showToast('✅ Registration successful! Please log in.', 'success');
+        }, 3000);
     }
 }
 
@@ -539,14 +545,14 @@ function handleLogin(event) {
     currentUser = user;
     DB.session.set(user);
 
-    // ── Show "Signed In Successfully" overlay ──────────────
+    // ── Show "Signed In Successfully" overlay with checkmark ──────────────
     const overlay    = document.getElementById('successOverlay');
     const titleEl    = document.getElementById('successTitle');
     const subEl      = document.getElementById('successSub');
     const chipEl     = document.getElementById('successUserChip');
 
-    if (titleEl) titleEl.textContent = '✅ Signed In Successfully!';
-    if (subEl)   subEl.textContent   = 'Welcome back, ' + user.name + '!';
+    if (titleEl) titleEl.textContent = 'Welcome Back! 👋';
+    if (subEl)   subEl.textContent   = 'Signed in successfully as ' + user.name;
     if (chipEl) {
         chipEl.textContent = '👤 ' + user.name + '  |  📞 ' + (user.mobile || '');
         chipEl.classList.remove('d-none');

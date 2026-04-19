@@ -328,6 +328,11 @@ function hideAllDashboardSections() {
 function showDashboardHome() {
     hideAllDashboardSections();
     document.getElementById('dashboardHome').classList.remove('d-none');
+    
+    // Show header only on home
+    const header = document.querySelector('.dashboard-header');
+    if (header) header.classList.remove('d-none');
+    
     updateDashboardStats();
     updateSidebarActive('overview');
 }
@@ -335,6 +340,11 @@ function showDashboardHome() {
 function showBooking() {
     hideAllDashboardSections();
     document.getElementById('bookingSection').classList.remove('d-none');
+    
+    // Hide header on booking
+    const header = document.querySelector('.dashboard-header');
+    if (header) header.classList.add('d-none');
+    
     resetBookingForm();
     updateSidebarActive('book ticket');
 }
@@ -342,6 +352,11 @@ function showBooking() {
 function showBookings() {
     hideAllDashboardSections();
     document.getElementById('myBookingsSection').classList.remove('d-none');
+    
+    // Hide header on bookings
+    const header = document.querySelector('.dashboard-header');
+    if (header) header.classList.add('d-none');
+    
     loadBookings();
     updateSidebarActive('my bookings');
 }
@@ -349,6 +364,11 @@ function showBookings() {
 function showProfile() {
     hideAllDashboardSections();
     document.getElementById('profileSection').classList.remove('d-none');
+    
+    // Hide header on profile
+    const header = document.querySelector('.dashboard-header');
+    if (header) header.classList.add('d-none');
+    
     loadProfile();
     updateSidebarActive('profile');
 }
@@ -356,6 +376,11 @@ function showProfile() {
 function showHistory() {
     hideAllDashboardSections();
     document.getElementById('historySection').classList.remove('d-none');
+    
+    // Hide header on history
+    const header = document.querySelector('.dashboard-header');
+    if (header) header.classList.add('d-none');
+    
     loadHistory();
     updateSidebarActive('history');
 }
@@ -391,6 +416,11 @@ function updateWalletBadge() {
 function showWallet() {
     hideAllDashboardSections();
     document.getElementById('walletSection').classList.remove('d-none');
+    
+    // Hide header on wallet
+    const header = document.querySelector('.dashboard-header');
+    if (header) header.classList.add('d-none');
+    
     updateSidebarActive('wallet');
 
     if (!currentUser) return;

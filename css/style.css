@@ -175,6 +175,40 @@ textarea::placeholder {
     color: white;
 }
 
+/* Date Input Styling Fix */
+input[type="date"].form-control-glass {
+    position: relative;
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 52px;
+}
+
+input[type="date"].form-control-glass::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+    z-index: 2;
+}
+
+input[type="date"].form-control-glass::after {
+    content: '\F210'; /* Bootstrap Icons calendar icon */
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary);
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
 /* Utilities */
 .bg-primary-glass {
     background: rgba(139, 92, 246, 0.2) !important;
@@ -2352,25 +2386,30 @@ input[id="signupMobile"]:-webkit-autofill {
    ========================================================================== */
 .bank-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 12px;
+    grid-template-columns: repeat(2, 1fr); /* Changed from 3 to 2 for better container fit */
+    gap: 14px;
+    margin-top: 15px;
+}
+
+@media (max-width: 1200px) {
+    .bank-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 576px) {
-    .bank-grid { grid-template-columns: repeat(2, 1fr); }
+    .bank-grid { grid-template-columns: 1fr; }
 }
 
 .bank-card {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 16px;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 18px;
     border: 1.5px solid rgba(255,255,255,0.08);
-    background: rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.3);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 0; /* Allow shrinking */
 }
 
 .bank-card:hover {

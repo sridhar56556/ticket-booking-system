@@ -21,8 +21,8 @@
 
     /* Typography */
     --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
 
     /* Service Colors */
     --color-bus: #fb923c;
@@ -104,6 +104,10 @@ body {
     border-radius: 28px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
     transition: var(--transition);
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
 }
 
 .glass-card:hover {
@@ -207,6 +211,29 @@ textarea::placeholder {
 
 .btn-primary-glass:active { transform: translateY(0) scale(0.97); }
 
+.btn-danger-glass {
+    background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+    border: none;
+    color: white !important;
+    font-weight: 700;
+    border-radius: 14px;
+    transition: var(--transition);
+    box-shadow: 0 8px 15px rgba(239, 68, 68, 0.25);
+    padding: 8px 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-danger-glass:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 25px rgba(239, 68, 68, 0.4);
+    filter: brightness(1.1);
+    color: white !important;
+}
+
+.btn-danger-glass:active { transform: translateY(0) scale(0.97); }
+
 .btn-icon-glass {
     width: 45px; height: 45px;
     border-radius: 12px;
@@ -217,6 +244,7 @@ textarea::placeholder {
     align-items: center;
     justify-content: center;
     transition: var(--transition);
+    position: relative; /* Fixed: Added for absolute badge positioning */
 }
 
 .btn-icon-glass:hover {
@@ -2029,3 +2057,790 @@ input[id="signupMobile"]:-webkit-autofill {
     font-size: 0.88rem;
     gap: 4px;
 }
+
+/* ==========================================================================
+   CITY AUTOCOMPLETE — Nominatim Live Search
+   ========================================================================== */
+.city-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    max-height: 320px;
+    overflow-y: auto;
+    background: rgba(10, 15, 35, 0.97);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-top: none;
+    border-radius: 0 0 18px 18px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    display: none;
+    animation: dropdownSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.city-dropdown.active {
+    display: block;
+}
+
+@keyframes dropdownSlideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar */
+.city-dropdown::-webkit-scrollbar {
+    width: 5px;
+}
+.city-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+.city-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.4);
+    border-radius: 10px;
+}
+
+/* Individual suggestion item */
+.city-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: all 0.2s ease;
+}
+
+.city-dropdown-item:last-child {
+    border-bottom: none;
+    border-radius: 0 0 18px 18px;
+}
+
+.city-dropdown-item:hover,
+.city-dropdown-item.active {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.city-dropdown-item:hover .city-icon {
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);
+}
+
+/* Location icon */
+.city-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.city-icon.city-type {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.15));
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34d399;
+}
+
+.city-icon.town-type {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(245, 158, 11, 0.15));
+    border: 1px solid rgba(251, 146, 60, 0.35);
+    color: #fb923c;
+}
+
+.city-icon.village-type {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(96, 165, 250, 0.15));
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+}
+
+.city-icon.default-type {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(192, 132, 252, 0.15));
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    color: #a78bfa;
+}
+
+/* Text content */
+.city-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.city-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #f0f4ff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.city-name .match {
+    color: #a78bfa;
+    font-weight: 800;
+}
+
+.city-region {
+    font-size: 0.75rem;
+    color: rgba(148, 163, 184, 0.8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+/* Country flag/badge */
+.city-country-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(139, 92, 246, 0.9);
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Loading state */
+.city-dropdown-loading {
+    padding: 20px;
+    text-align: center;
+    color: rgba(148, 163, 184, 0.7);
+    font-size: 0.85rem;
+}
+
+.city-dropdown-loading i {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    display: block;
+    animation: spinLoader 1s linear infinite;
+}
+
+@keyframes spinLoader {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* No results */
+.city-dropdown-empty {
+    padding: 24px 18px;
+    text-align: center;
+    color: rgba(148, 163, 184, 0.6);
+    font-size: 0.85rem;
+}
+
+.city-dropdown-empty i {
+    font-size: 1.8rem;
+    display: block;
+    margin-bottom: 8px;
+    color: rgba(239, 68, 68, 0.5);
+}
+
+/* Powered by OSM badge */
+.city-dropdown-footer {
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 0.65rem;
+    color: rgba(100, 116, 139, 0.5);
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    letter-spacing: 0.5px;
+}
+
+/* Ensure dropdown is above everything in hero search */
+.search-bar-glass .city-dropdown {
+    border-radius: 0 0 16px 16px;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .city-dropdown {
+        max-height: 250px;
+    }
+    .city-dropdown-item {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+    .city-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        font-size: 0.85rem;
+    }
+    .city-name { font-size: 0.85rem; }
+    .city-region { font-size: 0.7rem; }
+}
+
+/* ==========================================================================
+   PAYMENT METHOD SELECTION GRID
+   ========================================================================== */
+.pay-method-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+    .pay-method-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.pay-method-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 12px;
+    border-radius: 20px;
+    border: 2px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+}
+
+.pay-method-card:hover {
+    border-color: rgba(139,92,246,0.4);
+    background: rgba(139,92,246,0.06);
+    transform: translateY(-6px);
+}
+
+.pay-method-card.active {
+    border-color: var(--primary);
+    background: rgba(139,92,246,0.12);
+    box-shadow: 0 0 30px rgba(139,92,246,0.2), inset 0 0 0 1px rgba(139,92,246,0.2);
+}
+
+.pay-method-icon {
+    width: 54px; height: 54px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.pay-method-card:hover .pay-method-icon,
+.pay-method-card.active .pay-method-icon {
+    transform: scale(1.12);
+    box-shadow: 0 0 20px currentColor;
+}
+
+.pay-method-label {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 0.3px;
+}
+
+.pay-method-sub {
+    font-size: 0.68rem;
+    color: rgba(148,163,184,0.7);
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   BANK LOGO GRID
+   ========================================================================== */
+.bank-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+}
+
+@media (max-width: 576px) {
+    .bank-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.bank-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.25);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.bank-card:hover {
+    border-color: rgba(139,92,246,0.3);
+    background: rgba(139,92,246,0.06);
+    transform: translateY(-3px);
+}
+
+.bank-card.selected {
+    border-color: var(--primary);
+    background: rgba(139,92,246,0.1);
+    box-shadow: 0 0 20px rgba(139,92,246,0.15);
+}
+
+.bank-logo {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.bank-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.bank-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bank-type {
+    font-size: 0.7rem;
+    color: rgba(148,163,184,0.6);
+}
+
+/* Bank brand colors */
+.bank-sbi { background: linear-gradient(135deg, #1a5276, #2980b9); }
+.bank-icici { background: linear-gradient(135deg, #e67e22, #d35400); }
+.bank-hdfc { background: linear-gradient(135deg, #004b87, #0066b0); }
+.bank-axis { background: linear-gradient(135deg, #97144d, #b71c5e); }
+.bank-kotak { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+.bank-pnb { background: linear-gradient(135deg, #8e44ad, #6c3483); }
+.bank-bob { background: linear-gradient(135deg, #e67e22, #d68910); }
+.bank-canara { background: linear-gradient(135deg, #2471a3, #1a5276); }
+.bank-union { background: linear-gradient(135deg, #1abc9c, #16a085); }
+.bank-idbi { background: linear-gradient(135deg, #2e86c1, #1b4f72); }
+
+/* ==========================================================================
+   PAYMENT FORM GLASS CARD
+   ========================================================================== */
+.pay-form-card {
+    background: rgba(10, 15, 35, 0.6);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 22px;
+    padding: 28px;
+    margin-top: 16px;
+    animation: payFormSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes payFormSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.pay-form-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pay-form-title i {
+    font-size: 1.2rem;
+}
+
+/* Selected bank display */
+.selected-bank-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: rgba(139,92,246,0.08);
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 14px;
+    margin-bottom: 20px;
+}
+
+.selected-bank-display .bank-logo {
+    width: 40px; height: 40px;
+    font-size: 0.95rem;
+}
+
+/* UPI Apps Grid */
+.upi-apps-grid {
+    display: flex;
+    gap: 14px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+}
+
+.upi-app-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 50px;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    background: rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: white;
+}
+
+.upi-app-chip:hover {
+    border-color: rgba(236,72,153,0.4);
+    background: rgba(236,72,153,0.08);
+}
+
+.upi-app-chip.active {
+    border-color: #f472b6;
+    background: rgba(236,72,153,0.15);
+    box-shadow: 0 0 15px rgba(236,72,153,0.2);
+}
+
+.upi-app-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+/* Cash total card */
+.cash-total-card {
+    text-align: center;
+    padding: 30px 20px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(251,146,60,0.08), rgba(245,158,11,0.04));
+    border: 1px solid rgba(251,146,60,0.25);
+    margin-top: 16px;
+}
+
+.cash-total-amount {
+    font-family: 'Outfit', sans-serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: #fb923c;
+    text-shadow: 0 0 30px rgba(251,146,60,0.3);
+    line-height: 1;
+    margin: 12px 0;
+}
+
+.cash-confirm-btn {
+    background: linear-gradient(135deg, #fb923c, #f59e0b);
+    border: none;
+    color: white;
+    padding: 14px 40px;
+    border-radius: 100px;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 10px 25px rgba(251,146,60,0.3);
+    transition: all 0.3s ease;
+    margin-top: 16px;
+}
+
+.cash-confirm-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(251,146,60,0.5);
+    color: white;
+}
+
+/* ==========================================================================
+   PAYMENT PROCESSING OVERLAY
+   ========================================================================== */
+.pay-processing-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10010;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(3,7,18,0.95);
+    backdrop-filter: blur(30px);
+    animation: overlayFadeIn 0.3s ease;
+}
+
+.pay-processing-spinner {
+    width: 60px; height: 60px;
+    border: 4px solid rgba(139,92,246,0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spinLoader 0.8s linear infinite;
+    margin-bottom: 24px;
+}
+
+.pay-processing-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.5px;
+}
+
+.pay-processing-sub {
+    font-size: 0.85rem;
+    color: rgba(148,163,184,0.7);
+    margin-top: 8px;
+}
+
+/* ==========================================================================
+   RATING MODAL & STAR SYSTEM
+   ========================================================================== */
+.rating-modal-card {
+    background: rgba(15, 23, 42, 0.9) !important;
+    backdrop-filter: blur(25px) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.rating-icon-ring {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(245,158,11,0.1);
+    border: 2px solid rgba(245,158,11,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.star-rating-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    font-size: 2.8rem;
+    direction: ltr; /* Ensure left-to-right */
+}
+
+.star {
+    cursor: pointer;
+    color: rgba(255,255,255,0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-shadow: 0 0 0 transparent;
+}
+
+.star:hover,
+.star:hover ~ .star {
+    /* We handle state via JS, but hover for feedback */
+}
+
+.star.active {
+    color: #f59e0b;
+    text-shadow: 0 0 25px rgba(245,158,11,0.5);
+    transform: scale(1.15);
+}
+
+.star:hover {
+    transform: scale(1.3) rotate(15deg);
+    color: #fbbf24;
+}
+
+.rating-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 14px 18px;
+    color: white;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.rating-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.15);
+}
+
+.btn-rate-submit {
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    border: none;
+    color: white;
+    padding: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(139,92,246,0.3);
+}
+
+.btn-rate-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(139,92,246,0.5);
+    color: white;
+}
+
+/* ==========================================================================
+   NOTIFICATION SYSTEM
+   ========================================================================== */
+.notification-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-dark);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    animation: badge-pulse 2s infinite;
+}
+
+@keyframes badge-pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* ==========================================================================
+   DASHBOARD HEADER & TOP BAR
+   ========================================================================== */
+.dashboard-header {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    background: rgba(10, 15, 26, 0.95);
+    backdrop-filter: blur(40px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 15px 30px;
+    margin: -1.5rem -1.5rem 2rem -1.5rem; /* Matches main container padding */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    animation: sticky-slide-down 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sticky-slide-down {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.welcome-msg h4 {
+    font-size: 1.35rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-phone-display {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   NOTIFICATION SYSTEM (RE-OVERHAUL)
+   ========================================================================== */
+.notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #ff4757;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0a0f1a;
+    box-shadow: 0 4px 10px rgba(255, 71, 87, 0.5);
+    animation: badge-pulse 2s infinite;
+    padding-bottom: 1px;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: calc(100% + 15px);
+    right: 0;
+    width: 380px;
+    max-height: 520px;
+    background: #0f172a !important; /* Force solid dark slate */
+    border: 1px solid rgba(139, 92, 246, 0.3); /* Themed border */
+    border-radius: 28px;
+    z-index: 100000;
+    box-shadow: 
+        0 30px 60px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 0 40px rgba(139, 92, 246, 0.1);
+    overflow: hidden;
+    transform-origin: top right;
+    animation: dropdown-fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notif-header {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.notif-header h6 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #e2e8f0;
+}
+
+.notif-body {
+    padding: 12px;
+}
+
+.notif-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    margin-bottom: 10px;
+}
+
+.notif-item.unread {
+    background: rgba(139, 92, 246, 0.08) !important;
+    border-color: rgba(139, 92, 246, 0.15) !important;
+}
+
+.unread-dot {
+    width: 6px; height: 6px;
+    background: #8b5cf6;
+    border-radius: 50%;
+}
+
+/* ==========================================================================
+   SEARCH BAR ENHANCEMENTS (VISIBILITY FIX)
+   ========================================================================== */
+.hero-label-from {
+    color: #a855f7 !important; /* Vivid Purple */
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+.hero-label-to {
+    color: #00d084 !important; /* Neon Emerald */
+    text-shadow: 0 0 10px rgba(0, 208, 132, 0.3);
+}
+
+@keyframes dropdown-fade-in {
+    from { opacity: 0; transform: scale(0.95) translateY(-20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Notification Types Polish */
+.notif-success .notif-icon { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.notif-info .notif-icon { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+.notif-warning .notif-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.notif-danger .notif-icon { background: rgba(239, 68, 68, 0.15); color: #ef4444; }

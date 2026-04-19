@@ -163,11 +163,15 @@ function submitModalRating() {
 
     // Close modal
     bootstrap.Modal.getInstance(document.getElementById('ratingModal'))?.hide();
-    selectedModalRating = 0;
 
     // Show celebration toast
     const stars = '★'.repeat(selectedModalRating) + '☆'.repeat(5 - selectedModalRating);
     showToast(`🙏 Thank you! You rated us ${stars} — ${label}`, 'success');
+
+    selectedModalRating = 0;
+
+    // Return to main booking page (Dashboard Home)
+    showDashboardHome();
 }
 
 // Filtering Functionality
@@ -563,6 +567,13 @@ function handleLogin(event) {
         if (overlay)  overlay.classList.add('d-none');
         if (chipEl)   chipEl.classList.add('d-none');
         showDashboard();
+
+        // Add Welcome Notification
+        addNotification({
+            title: 'Welcome Back! 👋',
+            message: `Great to see you again, ${user.name}. Your dashboard is ready.`,
+            type: 'info'
+        });
     }, 2000);
 }
 
@@ -708,6 +719,13 @@ function goToStep3() {
     
     if (!operator || !from || !to || !date || !timeVal || !typeValue || !passengerCount) {
         showToast('Please fill all fields including the journey time', 'warning');
+        return;
+    }
+
+    // Strict time format check (e.g. 12:09 is valid, 12:9 is invalid)
+    const hourPart = document.getElementById('journeyHour')?.value?.trim() || '';
+    if (!hourPart.match(/^(1[0-2]|[1-9]):[0-5][0-9]$/)) {
+        showToast('Invalid time format! Please enter minutes as two digits (e.g., 12:09)', 'danger');
         return;
     }
 
@@ -977,89 +995,335 @@ function applyCoupon() {
     }
 }
 
+// ══════════════════════════════════════════════════════
+// PAYMENT METHOD SELECTION & RENDERING SYSTEM
+// ══════════════════════════════════════════════════════
+
+// Bank data for Card & Online Banking
+const BANKS = [
+    { id: 'sbi',    name: 'State Bank of India', short: 'SBI',   css: 'bank-sbi' },
+    { id: 'icici',  name: 'ICICI Bank',          short: 'ICICI', css: 'bank-icici' },
+    { id: 'hdfc',   name: 'HDFC Bank',           short: 'HDFC',  css: 'bank-hdfc' },
+    { id: 'axis',   name: 'Axis Bank',           short: 'AXIS',  css: 'bank-axis' },
+    { id: 'kotak',  name: 'Kotak Mahindra',      short: 'KMB',   css: 'bank-kotak' },
+    { id: 'pnb',    name: 'Punjab National Bank', short: 'PNB',  css: 'bank-pnb' },
+    { id: 'bob',    name: 'Bank of Baroda',      short: 'BOB',   css: 'bank-bob' },
+    { id: 'canara', name: 'Canara Bank',         short: 'CNB',   css: 'bank-canara' },
+    { id: 'union',  name: 'Union Bank',          short: 'UBI',   css: 'bank-union' },
+    { id: 'idbi',   name: 'IDBI Bank',           short: 'IDBI',  css: 'bank-idbi' }
+];
+
+let selectedPayMethod = '';
+let selectedBank = null;
+
+function selectPayMethod(method) {
+    selectedPayMethod = method;
+    selectedBank = null;
+
+    // Update hidden select for backward compat
+    const sel = document.getElementById('paymentMethod');
+    if (sel) sel.value = method;
+
+    // Visual active state
+    document.querySelectorAll('.pay-method-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.method === method);
+    });
+
+    // Show Pay Now button
+    const payBtn = document.getElementById('payNowBtn');
+    if (payBtn) payBtn.style.display = (method === 'Cash') ? 'none' : 'block';
+
+    // Render the payment form
+    showPaymentFields();
+}
+
 function showPaymentFields() {
-    const method    = document.getElementById('paymentMethod').value;
+    const method    = selectedPayMethod || document.getElementById('paymentMethod')?.value || '';
     const container = document.getElementById('paymentFields');
+    if (!container) return;
+
     const exact     = currentBooking.total.toFixed(2);
     const rounded   = Math.ceil(currentBooking.total);
 
-    // Update wallet option label with live balance
-    if (currentUser) {
-        const balance = DB.wallet.get(currentUser.id).balance;
-        const walletOpt = document.getElementById('paymentMethod')
-            ?.querySelector('option[value="Wallet"]');
-        if (walletOpt) walletOpt.textContent = `💰 Wallet (Balance: ₹${balance.toFixed(2)})`;
+    if (!method) {
+        container.innerHTML = '';
+        return;
     }
 
-    const hint = `<div class="payment-hint mt-2">
-        <span class="hint-exact">Exact: <strong>₹${exact}</strong></span>
-        <span class="hint-sep">or</span>
-        <span class="hint-rounded">Rounded: <strong>₹${rounded}</strong></span>
-        <small class="d-block mt-1 text-muted">Paise are waived — pay ₹${rounded} or exact ₹${exact}</small>
-    </div>`;
-
-    if (method === 'Wallet') {
-        const balance = currentUser ? DB.wallet.get(currentUser.id).balance : 0;
-        const enough  = balance >= Math.round(currentBooking.total);
+    // ── CARD PAYMENT ──────────────────────────────────────
+    if (method === 'Card') {
         container.innerHTML = `
-            <div class="wallet-pay-box ${enough ? 'sufficient' : 'insufficient'}">
-                <div class="wallet-pay-header">
-                    <i class="bi bi-wallet2 me-2"></i>
-                    <span>Wallet Balance</span>
-                    <strong class="ms-auto">₹${balance.toFixed(2)}</strong>
+            <div class="pay-form-card">
+                <div class="pay-form-title"><i class="bi bi-credit-card-2-front text-primary"></i> Select Your Bank</div>
+                <div class="bank-grid" id="cardBankGrid">
+                    ${BANKS.map(b => `
+                        <div class="bank-card" data-bank="${b.id}" onclick="selectBank('${b.id}', 'card')">
+                            <div class="bank-logo ${b.css}">${b.short}</div>
+                            <div class="bank-info">
+                                <div class="bank-name">${b.name}</div>
+                                <div class="bank-type">Debit / Credit</div>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
-                <div class="wallet-pay-status">
-                    ${enough
-                        ? `<i class="bi bi-check-circle-fill text-success me-2"></i>
-                           <span class="text-success">Sufficient balance — ₹${balance.toFixed(2)} available, ₹${exact} will be deducted</span>`
-                        : `<i class="bi bi-x-circle-fill text-danger me-2"></i>
-                           <span class="text-danger">Insufficient balance — you need ₹${exact} but only have ₹${balance.toFixed(2)}</span>`
-                    }
-                </div>
-                ${!enough ? `<p class="text-muted small mt-2 mb-0">💡 Cancel a booking to get a refund in your wallet, or choose another payment method.</p>` : ''}
+                <div id="cardFormArea"></div>
             </div>`;
+
+    // ── ONLINE BANKING ──────────────────────────────────────
+    } else if (method === 'OnlineBanking') {
+        container.innerHTML = `
+            <div class="pay-form-card">
+                <div class="pay-form-title"><i class="bi bi-bank2 text-success"></i> Choose Your Bank</div>
+                <div class="bank-grid" id="netBankGrid">
+                    ${BANKS.map(b => `
+                        <div class="bank-card" data-bank="${b.id}" onclick="selectBank('${b.id}', 'net')">
+                            <div class="bank-logo ${b.css}">${b.short}</div>
+                            <div class="bank-info">
+                                <div class="bank-name">${b.name}</div>
+                                <div class="bank-type">Net Banking</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div id="netBankFormArea"></div>
+            </div>`;
+
+    // ── UPI PAYMENT ──────────────────────────────────────
     } else if (method === 'UPI') {
         container.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label">UPI ID</label>
-                <input type="text" class="form-control form-control-glass" id="upiId" placeholder="yourname@upi" pattern="[a-zA-Z0-9.\\-]{3,}@[a-zA-Z]{3,}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Payment Amount (₹)</label>
-                <input type="number" class="form-control form-control-glass" id="paymentAmount" placeholder="Enter ₹${rounded}" required>
-                ${hint}
-            </div>`;
-    } else if (method === 'Card') {
-        container.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label">Card Number</label>
-                <input type="text" class="form-control form-control-glass" id="cardNumber" placeholder="16-digit card number" pattern="\\d{16}" maxlength="16" required>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Expiry (MM/YY)</label>
-                    <input type="text" class="form-control form-control-glass" id="cardExpiry" placeholder="MM/YY" pattern="\\d{2}/\\d{2}" required>
+            <div class="pay-form-card">
+                <div class="pay-form-title"><i class="bi bi-phone text-danger"></i> UPI Payment</div>
+                <p class="text-muted small mb-3">Select your UPI app or enter your UPI ID directly</p>
+                <div class="upi-apps-grid">
+                    <div class="upi-app-chip active" onclick="selectUpiApp(this)">
+                        <div class="upi-app-icon" style="background:linear-gradient(135deg,#4285f4,#34a853);color:white;">G</div>
+                        Google Pay
+                    </div>
+                    <div class="upi-app-chip" onclick="selectUpiApp(this)">
+                        <div class="upi-app-icon" style="background:linear-gradient(135deg,#5f259f,#7b2ff7);color:white;">P</div>
+                        PhonePe
+                    </div>
+                    <div class="upi-app-chip" onclick="selectUpiApp(this)">
+                        <div class="upi-app-icon" style="background:linear-gradient(135deg,#002970,#00457c);color:white;">P</div>
+                        Paytm
+                    </div>
+                    <div class="upi-app-chip" onclick="selectUpiApp(this)">
+                        <div class="upi-app-icon" style="background:linear-gradient(135deg,#e74c3c,#c0392b);color:white;">B</div>
+                        BHIM
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">CVV</label>
-                    <input type="text" class="form-control form-control-glass" id="cardCvv" placeholder="4 digits" pattern="\\d{4}" maxlength="4" required>
+                <div class="mb-3 mt-3">
+                    <label class="form-label fw-bold"><i class="bi bi-at me-1"></i>Enter UPI ID</label>
+                    <input type="text" class="form-control form-control-glass" id="upiId" placeholder="9347389152@upi or name@upi" autocomplete="new-password" spellcheck="false" required>
+                    <small class="text-muted">Example: 9876543210@upi, john@okaxis</small>
                 </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Payment Amount (₹)</label>
-                <input type="number" class="form-control form-control-glass" id="paymentAmount" placeholder="Enter ₹${rounded}" required>
-                ${hint}
+                <div class="pay-form-card" style="background:rgba(168,85,247,0.12); border: 2px solid rgba(168,85,247,0.3); padding:20px; margin-top:16px;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="color:rgba(255,255,255,0.9); font-weight:600;">Amount to Pay</span>
+                        <span class="fs-2 fw-bold" style="color:#d8b4fe; text-shadow: 0 0 20px rgba(168,85,247,0.6);">₹${rounded}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small style="color:rgba(216,180,254,0.6);">Payment via ${document.querySelector('.upi-app-chip.active')?.textContent.trim() || 'UPI'}</small>
+                        <small style="color:rgba(255,255,255,0.4);">Exact: ₹${exact}</small>
+                    </div>
+                </div>
             </div>`;
+
+    // ── CASH PAYMENT ──────────────────────────────────────
     } else if (method === 'Cash') {
+        const payBtn = document.getElementById('payNowBtn');
+        if (payBtn) payBtn.style.display = 'none';
+
         container.innerHTML = `
-            <div class="mb-3">
-                <label class="form-label">Cash Amount (₹)</label>
-                <input type="number" class="form-control form-control-glass" id="paymentAmount" placeholder="Enter ₹${rounded}" required>
-                ${hint}
+            <div class="cash-total-card">
+                <p class="text-muted small mb-1 text-uppercase fw-bold" style="letter-spacing:2px;">Total Amount Due</p>
+                <div class="cash-total-amount">₹${rounded}</div>
+                <p class="text-muted small">Exact: ₹${exact} (paise waived)</p>
+                <button type="button" class="cash-confirm-btn" onclick="handleCashPayment()">
+                    <i class="bi bi-cash-coin me-2"></i> Confirm Cash Payment
+                </button>
+                <p class="text-muted small mt-3"><i class="bi bi-info-circle me-1"></i>Pay the above amount at the counter before boarding</p>
             </div>`;
+
+    // ── WALLET PAYMENT ──────────────────────────────────────
+    } else if (method === 'Wallet') {
+        const balance = currentUser ? DB.wallet.get(currentUser.id).balance : 0;
+        const total   = Math.ceil(currentBooking.total);
+        const enough  = balance >= total;
+        
+        container.innerHTML = `
+            <div style="animation: payFormSlideIn 0.3s ease;">
+                <div class="pay-form-card" style="background:rgba(124,58,237,0.08); border: 2px solid rgba(124,58,237,0.25); padding:20px;">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="user-avatar-glass me-3" style="width:50px; height:50px; background:rgba(124,58,237,0.2); border-color:rgba(124,58,237,0.4);">
+                            <i class="bi bi-wallet2" style="color:#a78bfa;"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold">Virtual Wallet</div>
+                            <div class="text-muted small">Safe & Instant Payment</div>
+                        </div>
+                        <div class="ms-auto text-end">
+                            <div class="text-muted small">Available Balance</div>
+                            <div class="fw-bold fs-5" style="color:#a78bfa;">₹${balance.toFixed(2)}</div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-4 mb-3" style="background:rgba(255,255,255,0.03); border:1px border:rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Booking Total</span>
+                            <span class="fw-bold text-white">₹${total}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Status</span>
+                            ${enough 
+                                ? '<span class="badge rounded-pill bg-success bg-opacity-10 text-success"><i class="bi bi-check-circle me-1"></i>Sufficient</span>'
+                                : '<span class="badge rounded-pill bg-danger bg-opacity-10 text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Insufficient Balance</span>'
+                            }
+                        </div>
+                    </div>
+
+                    <div class="pay-form-card" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2); padding:16px;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span style="color:rgba(255,255,255,0.8); font-weight:600;">Net Payable</span>
+                            <span class="fs-2 fw-bold" style="color:#c084fc; text-shadow: 0 0 15px rgba(168,85,247,0.4);">₹${total}</span>
+                        </div>
+                    </div>
+                </div>
+                ${!enough ? `
+                <div class="alert alert-warning bg-opacity-10 border-warning border-opacity-25 text-warning mt-3 rounded-4" style="background:rgba(251,191,36,0.05);">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Your balance is ₹${balance.toFixed(2)}. Please cancel a previous booking to get a refund or choose another payment method.
+                </div>` : ''}
+            </div>`;
+        
+        const payBtn = document.getElementById('payNowBtn');
+        if (payBtn) {
+            payBtn.style.display = enough ? 'block' : 'none';
+        }
     } else {
         container.innerHTML = '';
     }
+}
+
+// ── Select a bank (Card or Net Banking) ──
+function selectBank(bankId, type) {
+    selectedBank = BANKS.find(b => b.id === bankId);
+    if (!selectedBank) return;
+
+    const exact   = currentBooking.total.toFixed(2);
+    const rounded = Math.ceil(currentBooking.total);
+
+    // Update bank card active state
+    const gridId = type === 'card' ? 'cardBankGrid' : 'netBankGrid';
+    document.querySelectorAll(`#${gridId} .bank-card`).forEach(c => {
+        c.classList.toggle('selected', c.dataset.bank === bankId);
+    });
+
+    const formAreaId = type === 'card' ? 'cardFormArea' : 'netBankFormArea';
+    const formArea = document.getElementById(formAreaId);
+    if (!formArea) return;
+
+    const bankDisplay = `
+        <div class="selected-bank-display">
+            <div class="bank-logo ${selectedBank.css}">${selectedBank.short}</div>
+            <div>
+                <div class="fw-bold">${selectedBank.name}</div>
+                <div class="text-muted small">${type === 'card' ? 'Debit / Credit Card' : 'Net Banking'}</div>
+            </div>
+            <i class="bi bi-check-circle-fill text-success ms-auto fs-5"></i>
+        </div>`;
+
+    if (type === 'card') {
+        formArea.innerHTML = `
+            <div style="margin-top:20px; animation: payFormSlideIn 0.3s ease;">
+                ${bankDisplay}
+                <div class="mb-3">
+                    <label class="form-label">Cardholder Name</label>
+                    <input type="text" class="form-control form-control-glass" id="cardHolderName" placeholder="Name on card" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Card Number</label>
+                    <input type="text" class="form-control form-control-glass" id="cardNumber" placeholder="Enter any 16 digits" maxlength="19" oninput="formatCardNumber(this)" autocomplete="new-password" spellcheck="false" required>
+                    <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Format: 16 digits total</small>
+                </div>
+                <div class="row">
+                    <div class="col-4 mb-3">
+                        <label class="form-label">CVV</label>
+                        <input type="password" class="form-control form-control-glass" id="cardCvv" placeholder="•••" maxlength="4" required>
+                    </div>
+                    <div class="col-4 mb-3">
+                        <label class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control form-control-glass" id="paymentAmount" value="${rounded}" required>
+                    </div>
+                    <div class="col-4 mb-3">
+                        <label class="form-label">PIN</label>
+                        <input type="password" class="form-control form-control-glass" id="cardPin" placeholder="4-digit PIN" maxlength="4" autocomplete="new-password" required>
+                    </div>
+                </div>
+                <div class="pay-form-card" style="background:rgba(59,130,246,0.1); border: 2px solid rgba(59,130,246,0.3); padding:20px; margin-top:16px;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="color:rgba(255,255,255,0.9); font-weight:600;">Total Payable</span>
+                        <span class="fs-2 fw-bold" style="color:#60a5fa; text-shadow: 0 0 20px rgba(59,130,246,0.5);">₹${rounded}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small style="color:rgba(96,165,250,0.6);">Processing Fee: ₹0.00</small>
+                        <small style="color:rgba(255,255,255,0.4);">Exact: ₹${exact}</small>
+                    </div>
+                </div>
+            </div>`;
+    } else {
+        // Net Banking form
+        formArea.innerHTML = `
+            <div style="margin-top:20px; animation: payFormSlideIn 0.3s ease;">
+                ${bankDisplay}
+                <div class="mb-3">
+                    <label class="form-label">Account Number</label>
+                    <input type="text" class="form-control form-control-glass" id="accountNumber" placeholder="Enter 9-18 digit account number" autocomplete="new-password" spellcheck="false" required>
+                    <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Supports any input from 9 to 18 digits</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Transaction PIN</label>
+                    <input type="password" class="form-control form-control-glass" id="netPin" placeholder="Enter any 4-digit PIN" maxlength="4" autocomplete="new-password" required>
+                    <small class="text-muted mt-1 d-block"><i class="bi bi-shield-lock me-1"></i>Secure 4-digit transaction PIN</small>
+                </div>
+                <div class="pay-form-card" style="background:rgba(0,255,127,0.12); border: 2px solid rgba(0,255,127,0.3); padding:20px; margin-top:16px;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="color:rgba(255,255,255,0.9); font-weight:600;">Amount to Pay</span>
+                        <span class="fs-2 fw-bold" style="color:#00ff7f; text-shadow: 0 0 20px rgba(0,255,127,0.5);">₹${rounded}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small style="color:rgba(16,185,129,0.7);">Seamless Bank Transfer</small>
+                        <small style="color:rgba(255,255,255,0.4);">Exact: ₹${exact}</small>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // Show pay button
+    const payBtn = document.getElementById('payNowBtn');
+    if (payBtn) payBtn.style.display = 'block';
+}
+
+// ── Format card number with spaces ──
+function formatCardNumber(input) {
+    let val = input.value.replace(/\D/g, '');
+    val = val.substring(0, 16);
+    val = val.replace(/(.{4})/g, '$1 ').trim();
+    input.value = val;
+}
+
+// ── Select UPI app ──
+function selectUpiApp(el) {
+    document.querySelectorAll('.upi-app-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+}
+
+// ── Cash payment handler ──
+function handleCashPayment() {
+    // Already set by selectPayMethod, but ensure here
+    document.getElementById('paymentMethod').value = 'Cash';
+    selectedPayMethod = 'Cash';
+    handleBookingSubmit();
 }
 
 // Handle booking form submission
@@ -1083,14 +1347,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function handleBookingSubmit() {
-    // Check if user already has an active booking
-    const userBookings = DB.bookings.getByUserId(currentUser.id);
-    const activeBooking = userBookings.find(b => !b.cancelled);
-    if (activeBooking) {
-        showToast('You already have an active booking. Please complete or cancel it first.', 'warning');
-        return;
-    }
-
     const paymentMethod = document.getElementById('paymentMethod').value;
 
     if (!paymentMethod) {
@@ -1124,48 +1380,34 @@ function handleBookingSubmit() {
         // Wallet payment validated — proceed to booking creation below
 
     } else if (paymentMethod === 'UPI') {
-        // Validate entered amount
-        const enteredAmount = parseFloat(document.getElementById('paymentAmount')?.value);
-        const isValidPay = !isNaN(enteredAmount) && (
-            Math.abs(enteredAmount - exactTotal) < 0.01 ||
-            enteredAmount === roundedUp ||
-            enteredAmount === roundedNorm
-        );
-        if (!isValidPay) {
-            showToast(`Enter ₹${exactTotal.toFixed(2)} or rounded ₹${roundedNorm} / ₹${roundedUp}`, 'danger');
-            return;
-        }
-        const upiId = document.getElementById('upiId').value;
-        if (!upiId.match(/[a-zA-Z0-9._\-]{3,}@[a-zA-Z]{3,}/)) {
-            showToast('Invalid UPI ID format', 'danger');
+        const upiId = (document.getElementById('upiId')?.value || '').trim();
+        // Permissive validation: requires only '@' to support phone@upi or name@upi
+        if (!upiId || !upiId.includes('@')) {
+            showToast('Please enter a valid UPI ID (e.g. 9347389152@upi or john@upi)', 'danger');
             return;
         }
 
     } else if (paymentMethod === 'Card') {
-        // Validate entered amount
-        const enteredAmount = parseFloat(document.getElementById('paymentAmount')?.value);
-        const isValidPay = !isNaN(enteredAmount) && (
-            Math.abs(enteredAmount - exactTotal) < 0.01 ||
-            enteredAmount === roundedUp ||
-            enteredAmount === roundedNorm
-        );
-        if (!isValidPay) {
-            showToast(`Enter ₹${exactTotal.toFixed(2)} or rounded ₹${roundedNorm} / ₹${roundedUp}`, 'danger');
+        // Validate bank selected
+        if (!selectedBank) {
+            showToast('Please select a bank first', 'warning');
             return;
         }
-        const cardNumber = document.getElementById('cardNumber').value;
-        const cvv        = document.getElementById('cardCvv').value;
+        const cardHolderName = document.getElementById('cardHolderName')?.value?.trim();
+        if (!cardHolderName) {
+            showToast('Please enter cardholder name', 'warning');
+            return;
+        }
+        const cardNumber = (document.getElementById('cardNumber')?.value || '').replace(/\s/g, '');
         if (!cardNumber.match(/^\d{16}$/)) {
             showToast('Invalid card number — must be 16 digits', 'danger');
             return;
         }
-        if (!cvv.match(/^\d{4}$/)) {
-            showToast('Invalid CVV — must be 4 digits', 'danger');
+        const cvv = document.getElementById('cardCvv')?.value || '';
+        if (!cvv.match(/^\d{3,4}$/)) {
+            showToast('Invalid CVV — must be 3 or 4 digits', 'danger');
             return;
         }
-
-    } else if (paymentMethod === 'Cash') {
-        // Validate entered amount
         const enteredAmount = parseFloat(document.getElementById('paymentAmount')?.value);
         const isValidPay = !isNaN(enteredAmount) && (
             Math.abs(enteredAmount - exactTotal) < 0.01 ||
@@ -1176,6 +1418,38 @@ function handleBookingSubmit() {
             showToast(`Enter ₹${exactTotal.toFixed(2)} or rounded ₹${roundedNorm} / ₹${roundedUp}`, 'danger');
             return;
         }
+        const cardPin = document.getElementById('cardPin')?.value || '';
+        if (!cardPin.match(/^\d{4}$/)) {
+            showToast('Please enter a valid 4-digit PIN', 'danger');
+            return;
+        }
+
+    } else if (paymentMethod === 'OnlineBanking') {
+        // Validate bank selected
+        if (!selectedBank) {
+            showToast('Please select a bank first', 'warning');
+            return;
+        }
+        const accountNum = (document.getElementById('accountNumber')?.value || '').trim();
+        // Specific check for < 9 digits
+        if (accountNum.length > 0 && accountNum.length < 9) {
+            showToast('Bank account is not sufficient', 'danger');
+            return;
+        }
+        // General numeric and length (9-18) check
+        if (!accountNum.match(/^\d{9,18}$/)) {
+            showToast('Invalid account number — must be 9 to 18 digits', 'danger');
+            return;
+        }
+        const netPin = document.getElementById('netPin')?.value || '';
+        // Check if exactly 4 digits
+        if (!netPin.match(/^\d{4}$/)) {
+            showToast('Invalid PIN — must be exactly 4 digits', 'danger');
+            return;
+        }
+
+    } else if (paymentMethod === 'Cash') {
+        // Cash — confirmed via button
     }
 
 
@@ -1216,34 +1490,55 @@ function handleBookingSubmit() {
     // Book seats
     DB.seatMap.bookSeats(journeyKey, currentBooking.seats);
     
-    // Success Animation Flow
-    const successOverlay = document.getElementById('successOverlay');
-    const successTitle = document.getElementById('successTitle');
-    const successSub = document.getElementById('successSub');
-    
-    if (successTitle) successTitle.textContent = 'Payment Confirmed';
-    if (successSub) successSub.textContent = 'Your journey begins here.';
-    
-    successOverlay.classList.remove('d-none');
-    
+    // ── STEP 1: Show Processing Overlay ──
+    const processingOverlay = document.createElement('div');
+    processingOverlay.className = 'pay-processing-overlay';
+    processingOverlay.innerHTML = `
+        <div class="pay-processing-spinner"></div>
+        <div class="pay-processing-text">Processing Payment...</div>
+        <div class="pay-processing-sub">Please wait, do not close this page</div>
+    `;
+    document.body.appendChild(processingOverlay);
+
     setTimeout(() => {
-        successOverlay.classList.add('d-none');
+        // Remove processing overlay
+        processingOverlay.remove();
+
+        // ── STEP 2: Show Green Checkmark Success ──
+        const successOverlay = document.getElementById('successOverlay');
+        const successTitle = document.getElementById('successTitle');
+        const successSub = document.getElementById('successSub');
         
-        // Mark all progress steps green
-        updateProgressBar(5);
+        if (successTitle) successTitle.textContent = 'Payment Successful! ✅';
+        if (successSub) successSub.textContent = `₹${currentBooking.total.toFixed(2)} paid via ${paymentMethod}`;
         
-        // Show receipt
-        showReceipt(booking);
+        successOverlay.classList.remove('d-none');
+
+        // Add Notification
+        addNotification({
+            title: 'Booking Confirmed! 🎫',
+            message: `Your ${currentBooking.service} ticket (${bookingId}) from ${currentBooking.from} to ${currentBooking.to} is booked successfully.`,
+            type: 'success'
+        });
         
-        // Reset form
-        resetBookingForm();
-        
-        showToast('🎉 Booking confirmed! Your journey begins!', 'success');
-        updateDashboardStats();
-        
-        // Show rating modal ONCE per booking — not on every payment
-        if (!booking._ratingShown) {
-            booking._ratingShown = true;
+        setTimeout(() => {
+            successOverlay.classList.add('d-none');
+            
+            // Mark all progress steps green
+            updateProgressBar(5);
+            
+            // Show receipt
+            showReceipt(booking);
+            
+            // Reset form & payment state
+            resetBookingForm();
+            selectedPayMethod = '';
+            selectedBank = null;
+            
+            showToast('🎉 Booking confirmed! Your journey begins!', 'success');
+            updateDashboardStats();
+            
+            // ── STEP 3: Show Star Rating Modal ──
             setTimeout(() => {
                 selectedModalRating = 0;
                 document.querySelectorAll('#modalStarRating .star').forEach(s => s.classList.remove('active'));
@@ -1251,14 +1546,14 @@ function handleBookingSubmit() {
                 if (lbl) lbl.textContent = '';
                 const feedbackEl = document.getElementById('ratingFeedbackModal');
                 if (feedbackEl) feedbackEl.value = '';
-                // Show rating after receipt has appeared
+                
                 setTimeout(() => {
                     const ratingModal = new bootstrap.Modal(document.getElementById('ratingModal'), { backdrop: 'static' });
                     ratingModal.show();
                 }, 600);
-            }, 1800);
-        }
-    }, 2500);
+            }, 1500);
+        }, 2500);
+    }, 1800);
 }
 
 function showReceipt(booking) {
@@ -1426,25 +1721,49 @@ function loadBookings() {
     }
     
     let html = '';
+    const serviceColors = { Bus: '#fb923c', Train: '#38bdf8', Flight: '#c084fc', Ship: '#2dd4bf' };
+
     bookings.forEach(booking => {
         const statusClass = booking.cancelled ? 'status-cancelled' : 'status-active';
         const statusText = booking.cancelled ? 'CANCELLED' : 'ACTIVE';
+        const color = serviceColors[booking.service] || '#8b5cf6';
         
         html += `
-            <div class="card booking-card ${booking.cancelled ? 'cancelled' : ''}">
+            <div class="card booking-card ${booking.cancelled ? 'cancelled' : ''}" style="border-left: 4px solid ${color};">
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-8">
-                            <h5>${booking.bookingId}</h5>
-                            <p class="mb-1"><strong>${booking.service}</strong> - ${booking.operator}</p>
-                            <p class="mb-1">${booking.from} → ${booking.to}</p>
-                             <p class="mb-0 text-muted">${formatDate(booking.date)} at ${formatTime(booking.time)}</p>
+                            <h5 style="color: ${color}; font-weight: 800; letter-spacing: 1px;">${booking.bookingId}</h5>
+                            <p class="mb-1" style="color: #fff; opacity: 0.9;">
+                                <strong style="color: ${color}">${booking.service}</strong> 
+                                <span style="opacity: 0.7; margin: 0 5px;">|</span> 
+                                <span style="color: #cbd5e1;">${booking.operator}</span>
+                            </p>
+                            <p class="mb-1" style="color: #f8fafc; font-weight: 500;">
+                                ${booking.from} <i class="bi bi-arrow-right mx-2" style="color: ${color}"></i> ${booking.to}
+                            </p>
+                            <p class="mb-0" style="color: #94a3b8; font-size: 0.9rem;">
+                                <i class="bi bi-calendar3 me-1"></i> ${formatDate(booking.date)} 
+                                <span class="mx-2">at</span> 
+                                <i class="bi bi-clock me-1"></i> ${formatTime(booking.time)}
+                            </p>
                         </div>
                         <div class="col-md-4 text-end">
-                            <span class="status-badge ${statusClass}">${statusText}</span>
-                            <h5 class="mt-2">₹${booking.total.toFixed(2)}</h5>
-                            <button class="btn btn-sm btn-primary mt-2" onclick="viewBookingDetails('${booking.bookingId}')">View Details</button>
-                            ${!booking.cancelled ? `<button class="btn btn-sm btn-danger mt-2" onclick="cancelBooking('${booking.bookingId}')">Cancel</button>` : ''}
+                            <div class="mb-2">
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                            <h4 class="fw-bold mb-0" style="color: ${color}; text-shadow: 0 0 10px ${color}40;">
+                                ₹${booking.total.toFixed(2)}
+                            </h4>
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-primary-glass px-3" onclick="viewBookingDetails('${booking.bookingId}')">
+                                    <i class="bi bi-receipt me-1"></i> Details
+                                </button>
+                                ${!booking.cancelled ? `
+                                <button class="btn btn-sm btn-danger-glass px-3" onclick="cancelBooking('${booking.bookingId}')">
+                                    <i class="bi bi-x-circle me-1"></i> Cancel
+                                </button>` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1533,6 +1852,13 @@ function handleCancelBooking(bookingId) {
 
     loadBookings();
     updateDashboardStats();
+
+    // Add Notification
+    addNotification({
+        title: 'Booking Cancelled ❌',
+        message: `Your booking ${bookingId} has been cancelled. ₹${refundAmount.toFixed(2)} refunded to your wallet.`,
+        type: 'danger'
+    });
 }
 
 // Profile
@@ -1573,6 +1899,111 @@ function updateProfile(event) {
     showToast('Profile updated successfully!', 'success');
     document.getElementById('userName').textContent = name;
 }
+
+// ==========================================================================
+// NOTIFICATION LOGIC
+// ==========================================================================
+
+function updateNotificationUI() {
+    if (!currentUser) return;
+    const notifs = DB.notifications.get(currentUser.id);
+    const badge = document.getElementById('notificationBadge');
+    const list = document.getElementById('notificationList');
+    
+    if (!badge || !list) return;
+
+    // Badge Count
+    const unreadCount = notifs.filter(n => !n.read).length;
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        badge.classList.remove('d-none');
+    } else {
+        badge.classList.add('d-none');
+    }
+
+    // List rendering
+    if (notifs.length === 0) {
+        list.innerHTML = `
+            <div class="notif-empty">
+                <i class="bi bi-bell-slash"></i>
+                <p>No notifications yet</p>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = notifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'} notif-${n.type}">
+            <div class="d-flex align-items-start">
+                <div class="notif-icon">
+                    <i class="bi ${n.type === 'success' ? 'bi-patch-check-fill' : 
+                                   n.type === 'danger' ? 'bi-x-circle-fill' : 
+                                   n.type === 'warning' ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill'}"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="notif-title">${n.title}</div>
+                    <div class="notif-msg">${n.message}</div>
+                    <div class="notif-time">${formatTimeAgo(n.date)}</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addNotification(notif) {
+    if (!currentUser) return;
+    DB.notifications.add(currentUser.id, notif);
+    updateNotificationUI();
+}
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (!dropdown) return;
+    const isHidden = dropdown.classList.contains('d-none');
+    
+    if (isHidden) {
+        dropdown.classList.remove('d-none');
+        // Mark all as read when opening
+        if (currentUser) {
+            DB.notifications.markAllAsRead(currentUser.id);
+            // We refresh the UI after a small delay to let user see "unread" state for a split second
+            setTimeout(() => updateNotificationUI(), 400);
+        }
+    } else {
+        dropdown.classList.add('d-none');
+    }
+}
+
+function clearNotifications() {
+    if (!currentUser) return;
+    DB.notifications.clear(currentUser.id);
+    updateNotificationUI();
+}
+
+function formatTimeAgo(dateStr) {
+    const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000000) === 0 ? 1 : Math.floor((new Date() - new Date(dateStr)) / 1000);
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return formatDate(dateStr);
+}
+
+// Close notifications when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('notificationDropdown');
+    const btn = document.getElementById('notificationBtn');
+    if (dropdown && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+        dropdown.classList.add('d-none');
+    }
+});
+
+// Update updateDashboardStats to also refresh notifications
+const originalUpdateDashboardStats = window.updateDashboardStats;
+window.updateDashboardStats = function() {
+    if (typeof originalUpdateDashboardStats === 'function') originalUpdateDashboardStats();
+    updateNotificationUI();
+};
 
 // Travel History
 function loadHistory() {
@@ -1615,3 +2046,232 @@ function updateMobileNav(clickedBtn) {
     btns.forEach(btn => btn.classList.remove('active'));
     clickedBtn.classList.add('active');
 }
+
+// ==========================================================================
+// CITY AUTOCOMPLETE — OpenStreetMap Nominatim API (FREE, no API key)
+// ==========================================================================
+
+(function() {
+    const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+    const DEBOUNCE_MS = 350;
+    const MIN_CHARS = 2;
+    let activeDropdown = null;
+    let debounceTimers = {};
+
+    // ── Place type classification ──
+    function getPlaceTypeClass(type) {
+        type = (type || '').toLowerCase();
+        if (['city', 'municipality', 'metropolis'].includes(type)) return 'city-type';
+        if (['town', 'district', 'suburb', 'borough', 'quarter'].includes(type)) return 'town-type';
+        if (['village', 'hamlet', 'locality', 'isolated_dwelling'].includes(type)) return 'village-type';
+        return 'default-type';
+    }
+
+    function getPlaceIcon(type) {
+        type = (type || '').toLowerCase();
+        if (['city', 'municipality', 'metropolis'].includes(type)) return 'bi-buildings';
+        if (['town', 'district', 'suburb'].includes(type)) return 'bi-building';
+        if (['village', 'hamlet'].includes(type)) return 'bi-house-door';
+        if (['state', 'region', 'province', 'county'].includes(type)) return 'bi-map';
+        return 'bi-geo-alt-fill';
+    }
+
+    // ── Parse display name into city + region ──
+    function parsePlaceName(displayName) {
+        const parts = displayName.split(',').map(p => p.trim());
+        const cityName = parts[0] || '';
+        const region = parts.slice(1, -1).join(', '); // Skip last (country)
+        const country = parts[parts.length - 1] || '';
+        return { cityName, region, country };
+    }
+
+    // ── Highlight matching text ──
+    function highlightMatch(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<span class="match">$1</span>');
+    }
+
+    // ── Fetch places from Nominatim ──
+    async function searchPlaces(query) {
+        try {
+            const params = new URLSearchParams({
+                q: query,
+                format: 'json',
+                addressdetails: 1,
+                limit: 8,
+                'accept-language': 'en'
+            });
+
+            const response = await fetch(`${NOMINATIM_URL}?${params}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Nominatim API error');
+            return await response.json();
+        } catch (err) {
+            console.error('City search error:', err);
+            return [];
+        }
+    }
+
+    // ── Render dropdown content ──
+    function renderDropdown(dropdownEl, results, query, inputEl) {
+        if (results.length === 0) {
+            dropdownEl.innerHTML = `
+                <div class="city-dropdown-empty">
+                    <i class="bi bi-search"></i>
+                    No places found for "<strong>${query}</strong>"
+                    <br><small>Try a different spelling</small>
+                </div>`;
+            dropdownEl.classList.add('active');
+            return;
+        }
+
+        let html = '';
+        results.forEach((place, index) => {
+            const { cityName, region, country } = parsePlaceName(place.display_name);
+            const placeType = place.type || place.class || '';
+            const typeClass = getPlaceTypeClass(placeType);
+            const icon = getPlaceIcon(placeType);
+
+            html += `
+                <div class="city-dropdown-item" data-index="${index}" 
+                     data-display="${cityName}, ${region ? region.split(',')[0] : country}"
+                     data-lat="${place.lat}" data-lon="${place.lon}">
+                    <div class="city-icon ${typeClass}">
+                        <i class="bi ${icon}"></i>
+                    </div>
+                    <div class="city-info">
+                        <div class="city-name">${highlightMatch(cityName, query)}</div>
+                        <div class="city-region">${region || ''}</div>
+                    </div>
+                    <span class="city-country-badge">${country}</span>
+                </div>`;
+        });
+
+        html += '<div class="city-dropdown-footer">🌍 Powered by OpenStreetMap</div>';
+        dropdownEl.innerHTML = html;
+        dropdownEl.classList.add('active');
+
+        // ── Click handlers for items ──
+        dropdownEl.querySelectorAll('.city-dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const displayVal = item.getAttribute('data-display');
+                inputEl.value = displayVal;
+                dropdownEl.classList.remove('active');
+                dropdownEl.innerHTML = '';
+                // Trigger any change handlers
+                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        });
+    }
+
+    // ── Show loading state ──
+    function showLoading(dropdownEl) {
+        dropdownEl.innerHTML = `
+            <div class="city-dropdown-loading">
+                <i class="bi bi-arrow-repeat"></i>
+                Searching places...
+            </div>`;
+        dropdownEl.classList.add('active');
+    }
+
+    // ── Initialize autocomplete on an input ──
+    function initCityAutocomplete(inputEl) {
+        const inputId = inputEl.id;
+        const dropdownEl = document.getElementById(`${inputId}-dropdown`);
+        if (!dropdownEl) return;
+
+        let activeIndex = -1;
+
+        // ── Input handler with debounce ──
+        inputEl.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            // Clear existing timer
+            if (debounceTimers[inputId]) {
+                clearTimeout(debounceTimers[inputId]);
+            }
+
+            if (query.length < MIN_CHARS) {
+                dropdownEl.classList.remove('active');
+                dropdownEl.innerHTML = '';
+                activeIndex = -1;
+                return;
+            }
+
+            showLoading(dropdownEl);
+            activeDropdown = dropdownEl;
+
+            debounceTimers[inputId] = setTimeout(async () => {
+                const results = await searchPlaces(query);
+                renderDropdown(dropdownEl, results, query, inputEl);
+                activeIndex = -1;
+            }, DEBOUNCE_MS);
+        });
+
+        // ── Keyboard navigation ──
+        inputEl.addEventListener('keydown', function(e) {
+            const items = dropdownEl.querySelectorAll('.city-dropdown-item');
+            if (!items.length) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = Math.min(activeIndex + 1, items.length - 1);
+                items.forEach((item, i) => item.classList.toggle('active', i === activeIndex));
+                items[activeIndex]?.scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, 0);
+                items.forEach((item, i) => item.classList.toggle('active', i === activeIndex));
+                items[activeIndex]?.scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (activeIndex >= 0 && items[activeIndex]) {
+                    items[activeIndex].click();
+                }
+            } else if (e.key === 'Escape') {
+                dropdownEl.classList.remove('active');
+                activeIndex = -1;
+            }
+        });
+
+        // ── Focus handler: re-show if there are results ──
+        inputEl.addEventListener('focus', function() {
+            if (dropdownEl.querySelector('.city-dropdown-item')) {
+                dropdownEl.classList.add('active');
+                activeDropdown = dropdownEl;
+            }
+        });
+    }
+
+    // ── Click outside to close ──
+    document.addEventListener('click', function(e) {
+        document.querySelectorAll('.city-dropdown.active').forEach(dd => {
+            const input = dd.previousElementSibling;
+            if (!dd.contains(e.target) && e.target !== input) {
+                dd.classList.remove('active');
+            }
+        });
+    });
+
+    // ── Initialize all city autocomplete inputs ──
+    function initAllAutocompletes() {
+        document.querySelectorAll('.city-autocomplete').forEach(input => {
+            initCityAutocomplete(input);
+        });
+    }
+
+    // Init on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAllAutocompletes);
+    } else {
+        initAllAutocompletes();
+    }
+
+    // Expose for dynamically added inputs
+    window.initCityAutocomplete = initCityAutocomplete;
+})();

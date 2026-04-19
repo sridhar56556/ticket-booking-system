@@ -227,8 +227,21 @@
                         <h4 class="fw-bold mb-0"><span id="userName">User</span> 👋</h4>
                         <p class="header-phone-display mb-0"><i class="bi bi-telephone-fill me-1" style="color:#38bdf8;"></i><span id="headerUserPhone">—</span></p>
                     </div>
-                    <div class="header-actions">
-                        <button class="btn btn-icon-glass me-2"><i class="bi bi-bell"></i></button>
+                    <div class="header-actions position-relative">
+                        <button class="btn btn-icon-glass me-2" id="notificationBtn" onclick="toggleNotifications()">
+                            <i class="bi bi-bell"></i>
+                            <span id="notificationBadge" class="notification-badge d-none">0</span>
+                        </button>
+                        <!-- Notifications Dropdown -->
+                        <div id="notificationDropdown" class="notification-dropdown d-none">
+                            <div class="notif-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Notifications</h6>
+                                <button class="btn btn-link btn-sm text-decoration-none p-0" onclick="clearNotifications()" style="font-size: 0.75rem;">Clear All</button>
+                            </div>
+                            <div id="notificationList" class="notif-body">
+                                <!-- Notifications will be filled by JS -->
+                            </div>
+                        </div>
                         <div class="user-avatar-glass male-avatar" onclick="showProfile()" id="userAvatarBtn">
                             <span id="userInitials">U</span>
                         </div>
@@ -242,14 +255,16 @@
                         <div class="dashboard-hero mb-5">
                             <h2 class="section-title mb-4">Where are you going? 🌍</h2>
                             <div class="search-bar-glass p-3 rounded-pill d-flex align-items-center gap-2">
-                                <div class="flex-grow-1 ps-3">
-                                    <label class="small text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">From</label>
-                                    <input type="text" class="border-0 bg-transparent text-white w-100 search-hero-input" placeholder="Current location" list="cityListMain" id="heroFrom">
+                                <div class="flex-grow-1 ps-3 position-relative">
+                                    <label class="small d-block text-uppercase fw-extrabold mb-1 hero-label-from" style="font-size: 0.65rem; letter-spacing: 1px;">From</label>
+                                    <input type="text" class="border-0 bg-transparent text-white w-100 search-hero-input city-autocomplete" placeholder="Current location" id="heroFrom" autocomplete="off" style="font-weight: 500;">
+                                    <div class="city-dropdown" id="heroFrom-dropdown"></div>
                                 </div>
                                 <button class="btn btn-icon-glass px-2" title="Swap" onclick="swapHeroCities()"><i class="bi bi-arrow-left-right text-primary"></i></button>
-                                <div class="flex-grow-1">
-                                    <label class="small text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">To</label>
-                                    <input type="text" class="border-0 bg-transparent text-white w-100 search-hero-input" placeholder="Search destination" list="cityListMain" id="heroTo">
+                                <div class="flex-grow-1 position-relative">
+                                    <label class="small d-block text-uppercase fw-extrabold mb-1 hero-label-to" style="font-size: 0.65rem; letter-spacing: 1px;">To</label>
+                                    <input type="text" class="border-0 bg-transparent text-white w-100 search-hero-input city-autocomplete" placeholder="Search destination" id="heroTo" autocomplete="off" style="font-weight: 500;">
+                                    <div class="city-dropdown" id="heroTo-dropdown"></div>
                                 </div>
                                 <button class="btn btn-primary-glass rounded-pill px-4 py-2" onclick="showBooking()">
                                     <i class="bi bi-search me-2"></i> SEARCH
@@ -379,13 +394,15 @@
                                                 <select class="form-select form-control-glass" id="operatorSelect" required></select>
                                             </div>
                                             <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">From City</label>
-                                                    <input type="text" class="form-control form-control-glass" id="fromCity" list="cityList" placeholder="e.g. Hyderabad" required>
+                                                <div class="col-md-6 mb-3 position-relative">
+                                                    <label class="form-label"><i class="bi bi-geo-alt me-1 text-success"></i>From City</label>
+                                                    <input type="text" class="form-control form-control-glass city-autocomplete" id="fromCity" placeholder="Search any city worldwide..." autocomplete="off" required>
+                                                    <div class="city-dropdown" id="fromCity-dropdown"></div>
                                                 </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">To City</label>
-                                                    <input type="text" class="form-control form-control-glass" id="toCity" list="cityList" placeholder="e.g. Mumbai" required>
+                                                <div class="col-md-6 mb-3 position-relative">
+                                                    <label class="form-label"><i class="bi bi-geo-alt-fill me-1 text-danger"></i>To City</label>
+                                                    <input type="text" class="form-control form-control-glass city-autocomplete" id="toCity" placeholder="Search any city worldwide..." autocomplete="off" required>
+                                                    <div class="city-dropdown" id="toCity-dropdown"></div>
                                                 </div>
                                             </div>
                                             <div class="row">
@@ -423,9 +440,9 @@
                                             <div class="glass-card p-3 mb-4" style="border-radius: 16px;">
                                                 <div class="form-check d-flex align-items-center gap-3">
                                                     <input class="form-check-input" type="checkbox" id="luggageCheck" style="width: 22px; height: 22px;">
-                                                    <label class="form-check-label fw-bold" for="luggageCheck">
+                                                    <label class="form-check-label fw-bold" for="luggageCheck" style="cursor: pointer; color: #fff;">
                                                         <i class="bi bi-briefcase me-2 text-warning"></i>Add Extra Luggage
-                                                        <small class="text-muted ms-2">(+₹50 per passenger)</small>
+                                                        <span class="ms-2" style="color: #60a5fa; font-weight: normal; opacity: 0.9;">(+₹50 per passenger)</span>
                                                     </label>
                                                 </div>
                                             </div>
@@ -459,22 +476,64 @@
                                                 <small class="text-muted ms-2">Available: FIRST10 (10%), SAVE20 (20%), FLAT15 (5%)</small>
                                             </div>
 
-                                            <!-- Payment Method -->
-                                            <div class="mb-3">
-                                                <label class="form-label">Payment Method</label>
-                                                <select class="form-select form-control-glass" id="paymentMethod" onchange="showPaymentFields()">
-                                                    <option value="">Select Payment Method</option>
-                                                    <option value="Wallet">💰 Wallet (Balance: <span id="walletOptionBalance">₹0</span>)</option>
+                                            <!-- ══════ PAYMENT METHOD VISUAL SELECTION ══════ -->
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold"><i class="bi bi-wallet2 me-2 text-primary"></i>Choose Payment Method</label>
+                                                <!-- Hidden select for backward compat -->
+                                                <select class="d-none" id="paymentMethod">
+                                                    <option value="">Select</option>
+                                                    <option value="Wallet">Wallet</option>
                                                     <option value="UPI">UPI</option>
                                                     <option value="Card">Card</option>
+                                                    <option value="OnlineBanking">Online Banking</option>
                                                     <option value="Cash">Cash</option>
                                                 </select>
+
+                                                <div class="pay-method-grid" id="payMethodGrid">
+                                                    <div class="pay-method-card" data-method="Wallet" onclick="selectPayMethod('Wallet')">
+                                                        <div class="pay-method-icon" style="background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(124,58,237,0.15)); border-color: rgba(79,70,229,0.4);">
+                                                            <i class="bi bi-wallet2" style="color:#a78bfa;"></i>
+                                                        </div>
+                                                        <span class="pay-method-label">Wallet</span>
+                                                        <small class="pay-method-sub">Use Balance</small>
+                                                    </div>
+                                                    <div class="pay-method-card" data-method="Card" onclick="selectPayMethod('Card')">
+                                                        <div class="pay-method-icon" style="background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15)); border-color: rgba(99,102,241,0.4);">
+                                                            <i class="bi bi-credit-card-2-front" style="color:#818cf8;"></i>
+                                                        </div>
+                                                        <span class="pay-method-label">Card</span>
+                                                        <small class="pay-method-sub">Debit / Credit</small>
+                                                    </div>
+                                                    <div class="pay-method-card" data-method="OnlineBanking" onclick="selectPayMethod('OnlineBanking')">
+                                                        <div class="pay-method-icon" style="background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(6,182,212,0.15)); border-color: rgba(16,185,129,0.4);">
+                                                            <i class="bi bi-bank2" style="color:#34d399;"></i>
+                                                        </div>
+                                                        <span class="pay-method-label">Net Banking</span>
+                                                        <small class="pay-method-sub">All Banks</small>
+                                                    </div>
+                                                    <div class="pay-method-card" data-method="Cash" onclick="selectPayMethod('Cash')">
+                                                        <div class="pay-method-icon" style="background: linear-gradient(135deg, rgba(251,146,60,0.2), rgba(245,158,11,0.15)); border-color: rgba(251,146,60,0.4);">
+                                                            <i class="bi bi-cash-stack" style="color:#fb923c;"></i>
+                                                        </div>
+                                                        <span class="pay-method-label">Cash</span>
+                                                        <small class="pay-method-sub">Pay Later</small>
+                                                    </div>
+                                                    <div class="pay-method-card" data-method="UPI" onclick="selectPayMethod('UPI')">
+                                                        <div class="pay-method-icon" style="background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(192,132,252,0.15)); border-color: rgba(236,72,153,0.4);">
+                                                            <i class="bi bi-phone" style="color:#f472b6;"></i>
+                                                        </div>
+                                                        <span class="pay-method-label">UPI</span>
+                                                        <small class="pay-method-sub">GPay / PhonePe</small>
+                                                    </div>
+                                                </div>
                                             </div>
+
+                                            <!-- ══════ PAYMENT FORM AREA (dynamically filled) ══════ -->
                                             <div id="paymentFields" class="mb-3"></div>
 
                                             <div class="d-flex gap-2">
                                                 <button type="button" class="btn btn-secondary rounded-pill" onclick="goToStep3Direct()"><i class="bi bi-arrow-left me-1"></i>Back</button>
-                                                <button type="submit" class="btn btn-success rounded-pill w-100 py-2 fw-bold">
+                                                <button type="submit" class="btn btn-success rounded-pill w-100 py-2 fw-bold" id="payNowBtn" style="display:none;">
                                                     <i class="bi bi-shield-check me-2"></i>Pay Now
                                                 </button>
                                             </div>
@@ -503,7 +562,12 @@
 
                     <!-- ===== PROFILE ===== -->
                     <div id="profileSection" class="content-section d-none animate__animated">
-                        <h2 class="section-title mb-4">Profile Settings</h2>
+                        <div class="d-flex align-items-center mb-4">
+                            <button class="btn btn-icon-glass me-3" onclick="showDashboardHome()" title="Back to Dashboard">
+                                <i class="bi bi-arrow-left"></i>
+                            </button>
+                            <h2 class="section-title mb-0">Profile Settings</h2>
+                        </div>
                         <div class="glass-card p-4 col-md-8 mx-auto">
                             <div class="text-center mb-4">
                                 <div class="user-avatar-glass mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
@@ -602,133 +666,7 @@
         </div>
     </div>
 
-    <!-- ===================== CITY DATALISTS ===================== -->
-    <datalist id="cityList">
-        <!-- Telangana -->
-        <option value="Hyderabad, Telangana">
-        <option value="Warangal, Telangana">
-        <option value="Karimnagar, Telangana">
-        <option value="Nizamabad, Telangana">
-        <option value="Khammam, Telangana">
-        <option value="Ramagundam, Telangana">
-        <option value="Mahbubnagar, Telangana">
-        <option value="Nalgonda, Telangana">
-        <option value="Adilabad, Telangana">
-        <option value="Suryapet, Telangana">
-        <option value="Miryalaguda, Telangana">
-        <option value="Jagtial, Telangana">
-        <option value="Siddipet, Telangana">
-        <option value="Mancherial, Telangana">
-        <!-- Andhra Pradesh -->
-        <option value="Vijayawada, Andhra Pradesh">
-        <option value="Visakhapatnam, Andhra Pradesh">
-        <option value="Tirupati, Andhra Pradesh">
-        <option value="Guntur, Andhra Pradesh">
-        <option value="Nellore, Andhra Pradesh">
-        <option value="Kurnool, Andhra Pradesh">
-        <option value="Rajahmundry, Andhra Pradesh">
-        <option value="Kakinada, Andhra Pradesh">
-        <option value="Ongole, Andhra Pradesh">
-        <option value="Anantapur, Andhra Pradesh">
-        <!-- Karnataka -->
-        <option value="Bengaluru, Karnataka">
-        <option value="Mysuru, Karnataka">
-        <option value="Mangaluru, Karnataka">
-        <option value="Hubballi, Karnataka">
-        <option value="Ballari, Karnataka">
-        <option value="Shivamogga, Karnataka">
-        <!-- Tamil Nadu -->
-        <option value="Chennai, Tamil Nadu">
-        <option value="Coimbatore, Tamil Nadu">
-        <option value="Madurai, Tamil Nadu">
-        <option value="Trichy, Tamil Nadu">
-        <option value="Salem, Tamil Nadu">
-        <option value="Tirunelveli, Tamil Nadu">
-        <option value="Vellore, Tamil Nadu">
-        <!-- Maharashtra -->
-        <option value="Mumbai, Maharashtra">
-        <option value="Pune, Maharashtra">
-        <option value="Nagpur, Maharashtra">
-        <option value="Nashik, Maharashtra">
-        <option value="Aurangabad, Maharashtra">
-        <option value="Solapur, Maharashtra">
-        <!-- Delhi / NCR -->
-        <option value="New Delhi, Delhi">
-        <option value="Noida, UP">
-        <option value="Gurgaon, Haryana">
-        <option value="Faridabad, Haryana">
-        <!-- Uttar Pradesh -->
-        <option value="Lucknow, UP">
-        <option value="Kanpur, UP">
-        <option value="Agra, UP">
-        <option value="Varanasi, UP">
-        <option value="Prayagraj, UP">
-        <option value="Ghaziabad, UP">
-        <!-- Rajasthan -->
-        <option value="Jaipur, Rajasthan">
-        <option value="Jodhpur, Rajasthan">
-        <option value="Udaipur, Rajasthan">
-        <option value="Ajmer, Rajasthan">
-        <option value="Bikaner, Rajasthan">
-        <!-- Gujarat -->
-        <option value="Ahmedabad, Gujarat">
-        <option value="Surat, Gujarat">
-        <option value="Vadodara, Gujarat">
-        <option value="Rajkot, Gujarat">
-        <!-- West Bengal -->
-        <option value="Kolkata, West Bengal">
-        <option value="Durgapur, West Bengal">
-        <option value="Asansol, West Bengal">
-        <option value="Siliguri, West Bengal">
-        <!-- Madhya Pradesh -->
-        <option value="Bhopal, Madhya Pradesh">
-        <option value="Indore, Madhya Pradesh">
-        <option value="Gwalior, Madhya Pradesh">
-        <option value="Jabalpur, Madhya Pradesh">
-        <!-- Bihar -->
-        <option value="Patna, Bihar">
-        <option value="Gaya, Bihar">
-        <option value="Muzaffarpur, Bihar">
-        <!-- Punjab & Haryana -->
-        <option value="Chandigarh, Punjab">
-        <option value="Amritsar, Punjab">
-        <option value="Ludhiana, Punjab">
-        <!-- Other -->
-        <option value="Bhubaneswar, Odisha">
-        <option value="Guwahati, Assam">
-        <option value="Jammu, J&K">
-        <option value="Srinagar, J&K">
-        <option value="Dehradun, Uttarakhand">
-        <option value="Ranchi, Jharkhand">
-        <option value="Raipur, Chhattisgarh">
-        <option value="Thiruvananthapuram, Kerala">
-        <option value="Kochi, Kerala">
-        <option value="Kozhikode, Kerala">
-        <option value="Goa, Goa">
-        <option value="Panaji, Goa">
-    </datalist>
-
-    <!-- Same list for hero search -->
-    <datalist id="cityListMain">
-        <option value="Hyderabad, Telangana">
-        <option value="Mumbai, Maharashtra">
-        <option value="Delhi, Delhi">
-        <option value="Bengaluru, Karnataka">
-        <option value="Chennai, Tamil Nadu">
-        <option value="Kolkata, West Bengal">
-        <option value="Pune, Maharashtra">
-        <option value="Ahmedabad, Gujarat">
-        <option value="Jaipur, Rajasthan">
-        <option value="Lucknow, UP">
-        <option value="Vijayawada, Andhra Pradesh">
-        <option value="Visakhapatnam, Andhra Pradesh">
-        <option value="Warangal, Telangana">
-        <option value="Karimnagar, Telangana">
-        <option value="Goa, Goa">
-        <option value="Bhubaneswar, Odisha">
-        <option value="Kochi, Kerala">
-        <option value="Coimbatore, Tamil Nadu">
-    </datalist>
+    <!-- City autocomplete is now powered by OpenStreetMap Nominatim API (live search) -->
 
     <!-- ===================== MODALS ===================== -->
     <!-- Receipt Modal -->
@@ -776,7 +714,7 @@
                         <i class="bi bi-send-fill me-2"></i>Submit Rating
                     </button>
                     <button class="btn btn-link mt-1" style="color:rgba(255,255,255,0.3);font-size:0.82rem;"
-                        data-bs-dismiss="modal">Skip for now</button>
+                        data-bs-dismiss="modal" onclick="showDashboardHome()">Skip for now</button>
                 </div>
             </div>
         </div>

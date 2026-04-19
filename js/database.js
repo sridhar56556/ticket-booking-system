@@ -194,6 +194,43 @@ const DB = {
         }
     },
 
+    // ===== NOTIFICATION OPERATIONS =====
+    notifications: {
+        _key(userId) { return `tbs_notifications_${userId}`; },
+
+        get(userId) {
+            const raw = localStorage.getItem(this._key(userId));
+            return raw ? JSON.parse(raw) : [];
+        },
+
+        add(userId, notification) {
+            const notifs = this.get(userId);
+            notifs.unshift({
+                id: Date.now().toString(),
+                title: notification.title,
+                message: notification.message,
+                type: notification.type || 'info', // success, info, warning
+                read: false,
+                date: new Date().toISOString()
+            });
+            // Keep only last 20 notifications
+            const limited = notifs.slice(0, 20);
+            localStorage.setItem(this._key(userId), JSON.stringify(limited));
+            return limited;
+        },
+
+        markAllAsRead(userId) {
+            const notifs = this.get(userId);
+            notifs.forEach(n => n.read = true);
+            localStorage.setItem(this._key(userId), JSON.stringify(notifs));
+            return notifs;
+        },
+
+        clear(userId) {
+            localStorage.setItem(this._key(userId), JSON.stringify([]));
+        }
+    },
+
     // Clear all data (for testing)
     clearAll() {
         localStorage.removeItem('tbs_users');
@@ -202,6 +239,7 @@ const DB = {
         sessionStorage.removeItem('tbs_currentUser');
         // Wallet keys are per-user so clear all tbs_wallet_ keys
         Object.keys(localStorage).filter(k => k.startsWith('tbs_wallet_')).forEach(k => localStorage.removeItem(k));
+        Object.keys(localStorage).filter(k => k.startsWith('tbs_notifications_')).forEach(k => localStorage.removeItem(k));
         this.init();
     }
 };
